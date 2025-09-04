@@ -110,14 +110,21 @@ const Payment = () => {
     {
       title: 'Date',
       accessor: 'date',
-      render: () => (
-        <div className="w-32">
-          <Select placeholder="Select date" className="text-xs">
-            <option value="today">Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="last-week">Last Week</option>
-            <option value="last-month">Last Month</option>
-          </Select>
+      render: (_, row) => (
+        <div className="w-36">
+          <input
+            type="date"
+            value={row.date}
+            onChange={(e) => {
+              const newDate = e.target.value;
+              setPaymentData(prev =>
+                prev.map(emp =>
+                  emp.id === row.id ? { ...emp, date: newDate } : emp
+                )
+              );
+            }}
+            className="border border-gray-300 rounded px-2 py-1 text-xs w-full"
+          />
         </div>
       )
     }
@@ -188,6 +195,28 @@ const Payment = () => {
     setFilterValue(e.target.value);
   };
 
+  // --- SEARCH + FILTER ---
+  const filteredData = paymentData.filter((emp) => {
+    const matchesSearch =
+      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.position.toLowerCase().includes(searchTerm.toLowerCase());
+
+    let matchesFilter = true;
+    if (filterValue === 'paid') {
+      matchesFilter = emp.paymentStatus.toLowerCase() === 'paid';
+    } else if (filterValue === 'unpaid') {
+      matchesFilter = emp.paymentStatus.toLowerCase() === 'unpaid';
+    } else if (filterValue === 'active') {
+      matchesFilter = emp.status.toLowerCase() === 'active';
+    } else if (filterValue === 'on-leave') {
+      matchesFilter = emp.status.toLowerCase() === 'on leave';
+    }
+
+    return matchesSearch && matchesFilter;
+  });
+
   return (
     <Container>
       <div className="w-full space-y-6">
@@ -203,7 +232,6 @@ const Payment = () => {
         {/* Balance + Metrics Card */}
         <div className="max-w-md">
           <div className="bg-white border border-gray-300 rounded-lg p-4">
-            {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm text-gray-400">Current Balance</h3>
               <Button 
@@ -219,10 +247,8 @@ const Payment = () => {
               </Button>
             </div>
 
-            {/* Balance Amount */}
             <h1 className="text-xl font-bold text-black mb-6">₦20,000,000</h1>
 
-            {/* Metrics inside same card */}
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="font-semibold text-black">₦{formatAmount(totalPayment)}</p>
@@ -262,7 +288,6 @@ const Payment = () => {
                 <option value="active">Active</option>
                 <option value="on-leave">On Leave</option>
               </Select>
-              <FaChevronDown size={12} className="text-gray-500 -ml-8 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -270,7 +295,7 @@ const Payment = () => {
         {/* Table Section */}
         <div className="bg-white rounded-lg border border-gray-300">
           <Table
-            data={paymentData}
+            data={filteredData}
             columns={columns}
             tableStyle="border-collapse"
             headerStyle="bg-gray-50"
@@ -288,7 +313,6 @@ const Payment = () => {
         {/* Confirm Payment Modal */}
         <Modal open={showConfirmModal} setOpen={setShowConfirmModal}>
           <div className="p-6">
-            {/* Modal Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-black">Confirm Salary Payment</h2>
               <button 
@@ -299,18 +323,15 @@ const Payment = () => {
               </button>
             </div>
 
-            {/* Payment Details */}
             <div className="space-y-4 mb-6">
               <p className="text-sm text-gray-600">
                 You are about to process salary payment for the following staff members:
               </p>
-              
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Payment month:</span>
                 <span className="font-medium text-black">July 2025</span>
               </div>
 
-              {/* Staff Members List */}
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-black">Staff Members:</h3>
                 <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -323,14 +344,12 @@ const Payment = () => {
                 </div>
               </div>
 
-              {/* Total Amount */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                 <span className="font-medium text-black">Total Amount</span>
                 <span className="font-bold text-lg text-black">₦{formatAmount(calculateTotalAmount())}</span>
               </div>
             </div>
 
-            {/* Confirm Button */}
             <Button 
               onClick={handleConfirmPayment}
               className="w-full bg-black hover:bg-gray-800"
@@ -343,21 +362,15 @@ const Payment = () => {
         {/* Success Modal */}
         <Modal open={showSuccessModal} setOpen={setShowSuccessModal}>
           <div className="p-6 text-center">
-            {/* Success Icon */}
             <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <FaCheck size={24} className="text-white" />
             </div>
-
-            {/* Success Message */}
             <h2 className="text-lg font-semibold text-black mb-2">
               Salary payment processed successfully
             </h2>
-            
             <p className="text-sm text-gray-600 mb-12">
               Payment for July 2025 salaries has been completed. Total amount of ₦{formatAmount(calculateTotalAmount())} has been processed.
             </p>
-
-            {/* Done Button */}
             <Button 
               onClick={handleSuccessModalClose}
               className="w-full bg-black hover:bg-gray-800"
