@@ -33,9 +33,9 @@ const Sidebar = ({ isOpen = true }) => {
       {/* Logo */}
       <Link href="/" className="p-6 flex items-center cursor-pointer">
         <Image 
-          src={logo}  // put your logo inside public/logo.png
+          src={logo} 
           alt="Virtual Flux Logo"
-          width={150}       // adjust width to fit sidebar
+          width={150}      
           height={40}
           priority
         />
