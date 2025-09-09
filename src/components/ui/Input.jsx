@@ -9,8 +9,8 @@ const Input = ({type, className, name, register, value,
     className={`w-full h-10 p-2 border-2 border-gray-300 rounded-md bg-gray-50 
         text-sm flex ring-offset-white file:border-0 file:bg-transparent file:text-sm 
         file:font-medium placeholder:text-gray-300 transition-all duration-300 ease-in-out 
-        focus:border-2 focus:border-catalineBlue outline-none 
-        disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        focus:border-2 focus:border-black outline-none 
+        disabled:cursor-not-allowed disabled:opacity-50 text-black ${className}`}
         {...register}
         placeholder={placeholder}
         accept={accept}
