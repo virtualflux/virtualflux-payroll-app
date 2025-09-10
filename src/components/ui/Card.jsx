@@ -14,7 +14,7 @@ const Card = ({title, icon: Icon, number}) => {
             <Icon size={30} className="text-gray-500"/>
         </div>
         <div>
-            <h1 className='md:text-xl text-lg font-bold'>
+            <h1 className='md:text-xl text-lg font-bold text-black'>
                 {number}
             </h1>
         </div>
