@@ -22,6 +22,7 @@ const Sidebar = ({ isOpen = true }) => {
     { icon: AiOutlineTeam, label: "Manage Staff", href: "/manage-staff" },
     { icon: AiOutlineCreditCard, label: "Payment", href: "/payment" },
     { icon: AiOutlineWallet, label: "Fund Wallet", href: "/fund-wallet" },
+    { icon: AiOutlineWallet, label: "Analytics", href: "/analytics" },
     { icon: AiOutlineHistory, label: "Transaction History", href: "/transaction-history" },
     { icon: AiOutlineSetting, label: "Privacy and Setting", href: "/privacy-settings" },
     { icon: AiOutlineKey, label: "Change Password", href: "/change-password" },
