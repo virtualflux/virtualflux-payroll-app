@@ -197,10 +197,10 @@ const AnalyticsDashboard = () => {
         <div className="mt-8">
           <div className="bg-white border border-gray-300 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-black mb-6">Workforce Analytics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Total Employee</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-8">
                   <span className="text-xl font-semibold text-black">1,000</span>
                   <span className="text-sm text-green-500 flex items-center">
                     <TrendingUp size={16} className="mr-1" />
@@ -211,7 +211,7 @@ const AnalyticsDashboard = () => {
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">New Hires</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-8">
                   <span className="text-xl font-semibold text-black">50</span>
                   <span className="text-sm text-green-500 flex items-center">
                     <TrendingUp size={16} className="mr-1" />
@@ -222,7 +222,7 @@ const AnalyticsDashboard = () => {
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Turnover</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-8">
                   <span className="text-xl font-semibold text-black">10</span>
                   <span className="text-sm text-red-500 flex items-center">
                     <TrendingUp size={16} className="mr-1 rotate-180" />
