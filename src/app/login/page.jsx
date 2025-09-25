@@ -31,7 +31,6 @@ const LoginPage = () => {
       ...prev,
       [name]: value
     }))
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -42,46 +41,29 @@ const LoginPage = () => {
 
   const validateForm = () => {
     const newErrors = {}
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required'
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required'
-    }
-
+    if (!formData.email.trim()) newErrors.email = 'Email is required'
+    if (!formData.password) newErrors.password = 'Password is required'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
-
+    if (!validateForm()) return
     setIsLoading(true)
 
-    // Simulate API call
     setTimeout(() => {
-      // Check dummy credentials
       if (formData.email === DUMMY_CREDENTIALS.email && 
           formData.password === DUMMY_CREDENTIALS.password) {
-        
         const userData = {
           email: formData.email,
           fullName: 'Admin User',
           isLoggedIn: true,
           loginDate: new Date().toISOString()
         }
-        
         localStorage.setItem('user', JSON.stringify(userData))
-        
         setIsLoading(false)
         router.push('/overview')
-        
       } else {
         setIsLoading(false)
         setErrors({
@@ -91,22 +73,17 @@ const LoginPage = () => {
     }, 1000)
   }
 
-  const handleSignupRedirect = () => {
-    router.push('/signup')
-  }
-
-  const handleForgotPassword = () => {
-    alert('Forgot password feature coming soon!')
-  }
+  const handleSignupRedirect = () => router.push('/signup')
+  const handleForgotPassword = () => router.push('/reset-password')
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Login Form */}
-      <div className="w-1/2 bg-gray-50 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-md">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-black mb-3">Welcome Back</h1>
-            <p className="text-gray-600 text-base">Please login below to continue</p>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-3">Welcome Back</h1>
+            <p className="text-gray-600 text-sm sm:text-base">Please login below to continue</p>
           </div>
 
           {errors.general && (
@@ -116,10 +93,10 @@ const LoginPage = () => {
           )}
 
           {/* Form with Border */}
-          <div className="bg-white rounded-xl border-1 border-gray-500 p-10">
+          <div className="bg-white rounded-xl border border-gray-500 p-6 sm:p-8 lg:p-10">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* User ID Input with Icon */}
-              <div className="relative mt-10 mb-10">
+              <div className="relative mt-8 sm:mt-10 mb-8 sm:mb-10">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaUser className="h-4 w-4 text-black" />
                 </div>
@@ -166,7 +143,7 @@ const LoginPage = () => {
               </div>
 
               {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                 <div className="flex items-center">
                   <input
                     id="remember-me"
@@ -221,22 +198,21 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side - Virtual Flux Branding */}
-      <div className="w-1/2 bg-gray-900 relative overflow-hidden flex items-center justify-center">
-        {/* Background Image - Replace this with your image */}
+      <div className="w-full lg:w-1/2 bg-gray-900 relative overflow-hidden flex items-center justify-center min-h-[50vh] lg:min-h-screen">
+        {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: {loginbgimg}
+            backgroundImage: `url(${loginbgimg.src})`
           }}
         >
-          {/* Dark overlay */}
           <div className="absolute inset-0 bg-black/10"></div>
         </div>
         
         {/* Content */}
-        <div className="relative z-10 text-center px-12">
+        <div className="relative z-10 text-center px-4 sm:px-8 lg:px-12">
           {/* Virtual Flux Logo/Brand */}
-          <div className="absolute top-8 right-8 flex items-center">
+          <div className="absolute top-4 sm:top-8 right-4 sm:right-8 flex items-center">
             {/* <div className="w-8 h-8 mr-3">
               <HiOutlineSparkles className="w-full h-full text-white" />
             </div> */}
@@ -244,19 +220,19 @@ const LoginPage = () => {
           </div>
 
           {/* Welcome Text Box */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-lg p-8 border border-white/10">
-            <h2 className="text-white text-2xl font-bold mb-4">
+          <div className="bg-black/30 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-white/10">
+            <h2 className="text-white text-xl sm:text-2xl font-bold mb-4">
               Welcome to Virtual Flux Admin
               <br />
               PayRoll Account
             </h2>
-            <p className="text-white/80 text-base mb-8">
+            <p className="text-white/80 text-sm sm:text-base mb-6 sm:mb-8">
               Your Team, Your Payroll-Perfectly synced
             </p>
           </div>
 
           {/* Bottom Text */}
-          <div className="mt-12">
+          <div className="mt-8 sm:mt-12">
             <p className="text-white/70 text-sm italic">
               Sign Up to get full access, Strictly for Admin.
             </p>
