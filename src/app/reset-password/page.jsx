@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FaUser, FaArrowLeft, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaUser, FaArrowLeft, FaLock, FaEye, FaEyeSlash, FaCheck } from 'react-icons/fa'
 import { HiOutlineSparkles } from 'react-icons/hi'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -17,6 +17,7 @@ const ResetPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showVerification, setShowVerification] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', ''])
   const [isVerifying, setIsVerifying] = useState(false)
   const [newPasswordData, setNewPasswordData] = useState({
@@ -136,7 +137,7 @@ const ResetPasswordPage = () => {
     setIsResetting(true)
     setTimeout(() => {
       setIsResetting(false)
-      router.push('/login')
+      setShowSuccess(true)
     }, 2000)
   }
 
@@ -145,6 +146,101 @@ const ResetPasswordPage = () => {
     setShowVerification(false)
     setVerificationCode(['', '', '', '', '', ''])
     setErrors({})
+  }
+
+  // Success Screen
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen flex flex-col lg:flex-row">
+        {/* Left Side - Success Message */}
+        <div className="w-full lg:w-1/2 bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+          <div className="w-full max-w-md">
+            {/* <button
+              onClick={handleBackToLogin}
+              className="flex items-center text-gray-600 hover:text-black transition-colors duration-200 mb-6"
+            >
+              <FaArrowLeft className="h-4 w-4 mr-2" />
+              <span className="text-sm">Back to sign in</span>
+            </button> */}
+
+            <div className="mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-black mb-3">Welcome Back</h1>
+              <p className="text-gray-600 text-sm sm:text-base">
+                Please login below to continue
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-500 p-6 sm:p-8 lg:p-10">
+                   <button
+              onClick={handleBackToLogin}
+              className="flex items-center text-gray-600 hover:text-black transition-colors duration-200 mb-6"
+            >
+              <FaArrowLeft className="h-4 w-4 mr-2" />
+              <span className="text-sm">Back to sign in</span>
+            </button>
+              <div className="text-center py-8">
+                {/* Success Icon */}
+                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                  <FaCheck className="h-8 w-8 text-green-500" />
+                </div>
+
+                {/* Success Message */}
+                <h2 className="text-xl sm:text-2xl font-bold text-black mb-4">
+                  Password Reset Successfully!
+                </h2>
+                
+                <p className="text-gray-600 text-sm sm:text-base mb-8">
+                  Your password has been successfully reset. you can now sign in with your new password.
+                </p>
+
+                {/* Back to Sign In Button */}
+                <Button
+                  onClick={handleBackToLogin}
+                  className="w-full h-12 text-base font-medium rounded-sm"
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side - Virtual Flux Branding */}
+        <div className="w-full lg:w-1/2 bg-gray-900 relative overflow-hidden flex items-center justify-center min-h-[50vh] lg:min-h-screen">
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${loginbgimg.src})`
+            }}
+          >
+            <div className="absolute inset-0 bg-black/10"></div>
+          </div>
+          
+          <div className="relative z-10 text-center px-4 sm:px-8 lg:px-12">
+            <div className="absolute top-4 sm:top-8 right-4 sm:right-8 flex items-center">
+              <span className="text-white font-semibold text-sm tracking-wide">VIRTUAL FLUX</span>
+            </div>
+
+            <div className="bg-black/30 backdrop-blur-sm rounded-lg p-6 sm:p-8 border border-white/10">
+              <h2 className="text-white text-xl sm:text-2xl font-bold mb-4">
+                Welcome to Virtual Flux Admin
+                <br />
+                PayRoll Account
+              </h2>
+              <p className="text-white/80 text-sm sm:text-base mb-6 sm:mb-8">
+                Your Team, Your Payroll-Perfectly synced
+              </p>
+            </div>
+
+            <div className="mt-8 sm:mt-12">
+              <p className="text-white/70 text-sm italic">
+                Sign Up to get full access, Strictly for Admin.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // New Password Screen
