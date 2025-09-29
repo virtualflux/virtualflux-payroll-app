@@ -1,8 +1,7 @@
 'use client'
-
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FaBuilding, FaIndustry, FaUsers, FaGlobe, FaMapMarkerAlt, FaHome, FaUpload, FaArrowLeft, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaBuilding, FaIndustry, FaUsers, FaGlobe, FaMapMarkerAlt, FaHome, FaUpload, FaArrowLeft, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaQrcode, FaKey, FaCopy, FaCheck } from 'react-icons/fa'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
@@ -25,9 +24,14 @@ const SignupPage = () => {
     adminPassword: '',
     verificationCode: ['', '', '', '', '', '', '']
   })
+  const [errors, setErrors] = useState({})
   const [showPassword, setShowPassword] = useState(false)
   const [isResending, setIsResending] = useState(false)
-  const [errors, setErrors] = useState({})
+  const [showManualSetup, setShowManualSetup] = useState(false)
+  const [twoFactorCode, setTwoFactorCode] = useState('JBSWY3DPEIPL2OVO')
+  const [isCodeCopied, setIsCodeCopied] = useState(false)
+  const [step4Phase, setStep4Phase] = useState('scan') // 'scan', 'verify', 'success'
+  const [twoFactorVerificationCode, setTwoFactorVerificationCode] = useState(['', '', '', '', '', ''])
 
   const steps = [
     { number: 1, title: "Company's account", active: true },
@@ -132,18 +136,13 @@ const SignupPage = () => {
   }
 
   const handleVerificationCodeChange = (index, value) => {
-    // Only allow single digit
     if (value.length > 1) return
-    
     const newCode = [...formData.verificationCode]
     newCode[index] = value
-    
     setFormData(prev => ({
       ...prev,
       verificationCode: newCode
     }))
-    
-    // Auto-focus next input
     if (value && index < 6) {
       const nextInput = document.getElementById(`code-${index + 1}`)
       if (nextInput) nextInput.focus()
@@ -151,7 +150,6 @@ const SignupPage = () => {
   }
 
   const handleVerificationKeyDown = (index, e) => {
-    // Handle backspace
     if (e.key === 'Backspace' && !formData.verificationCode[index] && index > 0) {
       const prevInput = document.getElementById(`code-${index - 1}`)
       if (prevInput) prevInput.focus()
@@ -160,15 +158,54 @@ const SignupPage = () => {
 
   const handleResendCode = async () => {
     setIsResending(true)
-    // Simulate API call
     setTimeout(() => {
       setIsResending(false)
-      // Clear verification code
       setFormData(prev => ({
         ...prev,
         verificationCode: ['', '', '', '', '', '', '']
       }))
     }, 2000)
+  }
+
+  const handle2FAVerificationChange = (index, value) => {
+    if (value.length > 1) return
+    const newCode = [...twoFactorVerificationCode]
+    newCode[index] = value
+    setTwoFactorVerificationCode(newCode)
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`twofa-${index + 1}`)
+      if (nextInput) nextInput.focus()
+    }
+  }
+
+  const handle2FAVerificationKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !twoFactorVerificationCode[index] && index > 0) {
+      const prevInput = document.getElementById(`twofa-${index - 1}`)
+      if (prevInput) prevInput.focus()
+    }
+  }
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(twoFactorCode)
+      setIsCodeCopied(true)
+      setTimeout(() => setIsCodeCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy code:', err)
+    }
+  }
+
+  const handleScannedCode = () => {
+    setStep4Phase('verify')
+  }
+
+  const handleVerifyTwoFactor = () => {
+    setStep4Phase('success')
+  }
+
+  const handleGoBackToScan = () => {
+    setStep4Phase('scan')
+    setTwoFactorVerificationCode(['', '', '', '', '', ''])
   }
 
   const validateStep1 = () => {
@@ -180,7 +217,6 @@ const SignupPage = () => {
     if (!formData.state) newErrors.state = 'State is required'
     if (!formData.localGovernment) newErrors.localGovernment = 'Local government is required'
     if (!formData.companyAddress.trim()) newErrors.companyAddress = 'Company address is required'
-    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -201,7 +237,6 @@ const SignupPage = () => {
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.adminPassword)) {
       newErrors.adminPassword = 'Password must contain uppercase, numbers and special characters and it must not be less than 8 characters'
     }
-    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -209,6 +244,15 @@ const SignupPage = () => {
   const validateStep3 = () => {
     const code = formData.verificationCode.join('')
     return code.length === 7
+  }
+
+  const validate2FAVerification = () => {
+    const code = twoFactorVerificationCode.join('')
+    return code.length === 6
+  }
+
+  const validateStep4 = () => {
+    return step4Phase === 'success'
   }
 
   const handleContinue = () => {
@@ -219,6 +263,9 @@ const SignupPage = () => {
     } else if (currentStep === 3 && validateStep3()) {
       setCurrentStep(4)
       console.log('Verification code:', formData.verificationCode.join(''))
+    } else if (currentStep === 4 && validateStep4()) {
+      setCurrentStep(5)
+      console.log('2FA setup completed')
     }
   }
 
@@ -241,29 +288,30 @@ const SignupPage = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button 
+          <button
             onClick={handleBack}
             className="flex items-center text-gray-600 hover:text-black mb-6 transition-colors"
           >
             <FaArrowLeft className="mr-2" />
           </button>
-          
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-black mb-2">Create Account</h1>
-            <p className="text-gray-600">Set up your company's payroll account</p>
+            <p className="text-gray-600">
+              {currentStep === 3 ? "Enter a verification code sent to your email" :
+               currentStep === 4 ? "Setup two-factor authentication for extra security" :
+               "Set up your company's payroll account"}
+            </p>
           </div>
-
           {/* Progress Steps */}
           <div className="flex items-center justify-center mb-8">
             <div className="flex items-center space-x-4 overflow-x-auto pb-4">
               {steps.map((step, index) => (
                 <div key={step.number} className="flex items-center">
-                  {/* Step Circle */}
                   <div className="flex flex-col items-center min-w-0">
                     <div className={`
                       w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                      ${getStepStatus(step.number) === 'current' 
-                        ? 'bg-black text-white' 
+                      ${getStepStatus(step.number) === 'current'
+                        ? 'bg-black text-white'
                         : getStepStatus(step.number) === 'completed'
                         ? 'bg-gray-800 text-white'
                         : 'bg-gray-300 text-gray-600'
@@ -275,13 +323,11 @@ const SignupPage = () => {
                       {step.title}
                     </span>
                   </div>
-                  
-                  {/* Connector Line */}
                   {index < steps.length - 1 && (
                     <div className={`
                       w-12 h-0.5 mx-2 mt-[-20px]
-                      ${getStepStatus(step.number) === 'completed' 
-                        ? 'bg-gray-800' 
+                      ${getStepStatus(step.number) === 'completed'
+                        ? 'bg-gray-800'
                         : 'bg-gray-300'
                       }
                     `} />
@@ -291,14 +337,11 @@ const SignupPage = () => {
             </div>
           </div>
         </div>
-
-        {/* Form Content */}
+        {/* Step 1 - Company Account */}
         {currentStep === 1 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Form Fields - Left Side */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Company Name */}
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">
                     Company Name
@@ -315,8 +358,6 @@ const SignupPage = () => {
                     <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
                   )}
                 </div>
-
-                {/* Industry and Company Size */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
@@ -337,7 +378,6 @@ const SignupPage = () => {
                       <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
                     )}
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
                       Company Size
@@ -358,8 +398,6 @@ const SignupPage = () => {
                     )}
                   </div>
                 </div>
-
-                {/* Country and State */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
@@ -380,7 +418,6 @@ const SignupPage = () => {
                       <p className="text-red-500 text-sm mt-1">{errors.country}</p>
                     )}
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
                       State
@@ -401,8 +438,6 @@ const SignupPage = () => {
                     )}
                   </div>
                 </div>
-
-                {/* Local Government and Company Address */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
@@ -423,7 +458,6 @@ const SignupPage = () => {
                       <p className="text-red-500 text-sm mt-1">{errors.localGovernment}</p>
                     )}
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
                       Company Address
@@ -442,14 +476,11 @@ const SignupPage = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Logo Upload - Right Side */}
               <div className="lg:col-span-1">
                 <div className="text-center">
                   <label className="block text-sm font-medium text-black mb-4">
                     Upload Logo
                   </label>
-                  
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-gray-400 transition-colors cursor-pointer">
                     <input
                       type="file"
@@ -471,8 +502,6 @@ const SignupPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Continue Button */}
             <div className="flex justify-center mt-8">
               <Button
                 onClick={handleContinue}
@@ -483,12 +512,10 @@ const SignupPage = () => {
             </div>
           </div>
         )}
-
         {/* Step 2 - Admin Account */}
         {currentStep === 2 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="max-w-2xl mx-auto space-y-6">
-              {/* Admin First Name */}
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Admin First Name
@@ -505,8 +532,6 @@ const SignupPage = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.adminFirstName}</p>
                 )}
               </div>
-
-              {/* Admin Last Name */}
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Admin Last Name
@@ -523,8 +548,6 @@ const SignupPage = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.adminLastName}</p>
                 )}
               </div>
-
-              {/* Email Address */}
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Email Address
@@ -541,8 +564,6 @@ const SignupPage = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.adminEmail}</p>
                 )}
               </div>
-
-              {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Password
@@ -573,8 +594,6 @@ const SignupPage = () => {
                 )}
               </div>
             </div>
-
-            {/* Continue Button */}
             <div className="flex justify-center mt-8">
               <Button
                 onClick={handleContinue}
@@ -585,8 +604,223 @@ const SignupPage = () => {
             </div>
           </div>
         )}
-
-        {currentStep >= 3 && (
+        {/* Step 3 - Email Verification */}
+        {currentStep === 3 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="max-w-2xl mx-auto text-center">
+              <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-black rounded-lg mb-4">
+                  <FaEnvelope className="text-white text-2xl" />
+                </div>
+                <h2 className="text-xl font-semibold text-black mb-2">
+                  Verify Your Email Address
+                </h2>
+                <p className="text-gray-600 text-sm mb-2">
+                  We've sent a verification code to <span className="font-semibold text-black">{formData.adminEmail}</span>
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Please check your inbox and enter the code below:
+                </p>
+              </div>
+              <div className="flex justify-center gap-3 mb-6">
+                {formData.verificationCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`code-${index}`}
+                    type="text"
+                    maxLength="1"
+                    value={digit}
+                    onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
+                    onKeyDown={(e) => handleVerificationKeyDown(index, e)}
+                    className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-md
+                             focus:border-black outline-none transition-colors bg-gray-50 text-black"
+                  />
+                ))}
+              </div>
+              <div className="mb-8">
+                <span className="text-gray-600 text-sm">Didn't receive the email? </span>
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={isResending}
+                  className="text-black hover:underline text-sm font-semibold disabled:opacity-50"
+                >
+                  {isResending ? 'Sending...' : 'Resend code'}
+                </button>
+              </div>
+              <Button
+                onClick={handleContinue}
+                disabled={!validateStep3()}
+                className={`px-12 py-3 text-lg font-medium ${
+                  validateStep3() ? 'bg-black' : 'bg-gray-400'
+                }`}
+              >
+                Verify Email
+              </Button>
+            </div>
+          </div>
+        )}
+        {/* Step 4 - 2FA Setup */}
+        {currentStep === 4 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="max-w-2xl mx-auto text-center">
+              {step4Phase === 'scan' && (
+                <>
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold text-black mb-2">
+                      Scan the QR Code
+                    </h2>
+                    <p className="text-gray-600 text-sm mb-6">
+                      Step 1: Open your authenticator app and scan this QR code
+                    </p>
+                    <div className="inline-block mb-6">
+                      <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
+                        <div className="w-40 h-40 bg-black relative">
+                          <div className="absolute inset-2 bg-white"></div>
+                          <div className="absolute top-2 left-2 w-8 h-8 bg-black"></div>
+                          <div className="absolute top-2 right-2 w-8 h-8 bg-black"></div>
+                          <div className="absolute bottom-2 left-2 w-8 h-8 bg-black"></div>
+                          <div className="absolute top-4 left-4 w-4 h-4 bg-white"></div>
+                          <div className="absolute top-4 right-4 w-4 h-4 bg-white"></div>
+                          <div className="absolute bottom-4 left-4 w-4 h-4 bg-white"></div>
+                          <div className="absolute top-12 left-8 w-2 h-2 bg-black"></div>
+                          <div className="absolute top-16 left-6 w-2 h-2 bg-black"></div>
+                          <div className="absolute top-20 left-12 w-2 h-2 bg-black"></div>
+                          <div className="absolute top-14 right-8 w-2 h-2 bg-black"></div>
+                          <div className="absolute top-18 right-6 w-2 h-2 bg-black"></div>
+                          <div className="absolute top-22 right-10 w-2 h-2 bg-black"></div>
+                          <div className="absolute bottom-12 left-10 w-2 h-2 bg-black"></div>
+                          <div className="absolute bottom-16 left-14 w-2 h-2 bg-black"></div>
+                          <div className="absolute top-28 left-16 w-2 h-2 bg-black"></div>
+                          <div className="absolute top-24 left-20 w-2 h-2 bg-black"></div>
+                          <div className="absolute top-32 right-12 w-2 h-2 bg-black"></div>
+                          <div className="absolute bottom-20 right-16 w-2 h-2 bg-black"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mb-6">
+                      <span className="text-gray-600 text-sm">Don't have a QR scanner? </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowManualSetup(!showManualSetup)}
+                        className="text-black hover:underline text-sm font-semibold"
+                      >
+                        Enter code manually
+                      </button>
+                    </div>
+                  </div>
+                  {showManualSetup && (
+                    <div className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-center mb-4">
+                        <FaKey className="text-black text-lg mr-2" />
+                        <h3 className="text-lg font-semibold text-black">Manual setup</h3>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-4">
+                        If you can't scan the QR code, enter this key manually in your authenticator app
+                      </p>
+                      <div className="flex items-center justify-center gap-2 mb-4">
+                        <div className="flex-1 max-w-sm">
+                          <Input
+                            type="text"
+                            value={twoFactorCode}
+                            readOnly
+                            className="text-center font-mono bg-white"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCopyCode}
+                          className="p-2 text-gray-500 hover:text-black transition-colors"
+                          title="Copy code"
+                        >
+                          <FaCopy className="text-lg" />
+                        </button>
+                      </div>
+                      {isCodeCopied && (
+                        <p className="text-green-600 text-sm">Code copied to clipboard!</p>
+                      )}
+                    </div>
+                  )}
+                  <Button
+                    onClick={handleScannedCode}
+                    className="px-12 py-3 text-lg font-medium"
+                  >
+                    I've scanned the code
+                  </Button>
+                </>
+              )}
+              {step4Phase === 'verify' && (
+                <>
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold text-black mb-2">
+                      Enter Verification Code
+                    </h2>
+                    <p className="text-gray-600 text-sm mb-6">
+                      Enter the 6 digits from your authenticator app
+                    </p>
+                    <div className="flex justify-center gap-3 mb-6">
+                      {twoFactorVerificationCode.map((digit, index) => (
+                        <input
+                          key={index}
+                          id={`twofa-${index}`}
+                          type="text"
+                          maxLength="1"
+                          value={digit}
+                          onChange={(e) => handle2FAVerificationChange(index, e.target.value)}
+                          onKeyDown={(e) => handle2FAVerificationKeyDown(index, e)}
+                          className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-md
+                                   focus:border-black outline-none transition-colors bg-gray-50 text-black"
+                        />
+                      ))}
+                    </div>
+                    <div className="mb-8">
+                      <span className="text-gray-600 text-sm">Having trouble? </span>
+                      <button
+                        type="button"
+                        onClick={handleGoBackToScan}
+                        className="text-black hover:underline text-sm font-semibold"
+                      >
+                        Go back to scan the QR code again
+                      </button>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleVerifyTwoFactor}
+                    disabled={!validate2FAVerification()}
+                    className={`px-12 py-3 text-lg font-medium ${
+                      validate2FAVerification() ? 'bg-black' : 'bg-gray-400'
+                    }`}
+                  >
+                    Verify Code
+                  </Button>
+                </>
+              )}
+              {step4Phase === 'success' && (
+                <>
+                  <div className="mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mb-6">
+                      <FaCheck className="text-white text-2xl" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-black mb-4">
+                      Two-Factor Authenticator Enabled!
+                    </h2>
+                    <p className="text-gray-600 text-sm mb-8">
+                      Your AdminPayroll account has been set up successfully with email verification<br />
+                      and two-factor authentication
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleContinue}
+                    className="px-12 py-3 text-lg font-medium"
+                  >
+                    Sync with zoho
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+        {currentStep > 4 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
             <h2 className="text-xl font-semibold text-black mb-4">
               Step {currentStep}: {steps[currentStep - 1].title}

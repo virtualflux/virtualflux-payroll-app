@@ -377,44 +377,45 @@ const Payment = () => {
           </div>
         </div>
 
-        {/* Search and Filter Section */}
-        <div className="flex items-center justify-end gap-4">
-          <div className="flex items-center gap-2">
-            <SearchInput
-              value={searchTerm}
-              onChange={handleSearch}
-              placeholder="Search"
-            />
-            <span className="text-sm text-gray-600">
-              Selected: {selectedEmployees.length} of {filteredData.length}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Select
-              value={filterValue}
-              onChange={handleFilterChange}
-              placeholder="Filter"
-              className="w-32"
-            >
-              <option value="">All</option>
-              <option value="paid">Paid</option>
-              <option value="unpaid">Unpaid</option>
-              <option value="active">Active</option>
-              <option value="on-leave">On Leave</option>
-            </Select>
-            
-            <Select
-              value={selectedMonth}
-              onChange={handleMonthChange}
-              className="w-40"
-            >
-              <option value="11,sept 2025">11,sept 2025</option>
-              <option value="august 2025">august 2025</option>
-              <option value="july 2025">july 2025</option>
-            </Select>
-          </div>
-        </div>
+      {/* Search and Filter Section */}
+<div className="flex items-center justify-end gap-4">
+  <div className="flex items-center gap-2">
+    <SearchInput
+      value={searchTerm}
+      onChange={handleSearch}
+      placeholder="Search"
+    />
+    <span className="text-sm text-gray-600">
+      Selected: {selectedEmployees.length} of {filteredData.length}
+    </span>
+  </div>
+  
+  <div className="flex items-center gap-4">
+    {/* Filter Select */}
+    <Select
+      value={filterValue}
+      onChange={handleFilterChange}
+      placeholder="Filter"
+      className="w-32"
+    >
+      <option value="">All</option>
+      <option value="paid">Paid</option>
+      <option value="unpaid">Unpaid</option>
+      <option value="active">Active</option>
+      <option value="on-leave">On Leave</option>
+    </Select>
+
+    {/* 📅 Month Picker instead of Select */}
+    <input
+      type="month"
+      value={selectedMonth}
+      onChange={(e) => setSelectedMonth(e.target.value)}
+      className="w-40 border border-gray-300 rounded-md px-3 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black"
+    />
+  </div>
+</div>
+
+
 
         {/* Table Section */}
         <div className="bg-white rounded-lg border border-gray-300">
