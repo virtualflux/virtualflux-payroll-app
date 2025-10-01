@@ -1,7 +1,8 @@
 'use client'
+
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FaBuilding, FaIndustry, FaUsers, FaGlobe, FaMapMarkerAlt, FaHome, FaUpload, FaArrowLeft, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaQrcode, FaKey, FaCopy, FaCheck } from 'react-icons/fa'
+import { FaBuilding, FaIndustry, FaUsers, FaGlobe, FaMapMarkerAlt, FaHome, FaUpload, FaArrowLeft, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaQrcode, FaKey, FaCopy, FaCheck, FaCheckCircle, FaIdCard } from 'react-icons/fa'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
@@ -30,8 +31,15 @@ const SignupPage = () => {
   const [showManualSetup, setShowManualSetup] = useState(false)
   const [twoFactorCode, setTwoFactorCode] = useState('JBSWY3DPEIPL2OVO')
   const [isCodeCopied, setIsCodeCopied] = useState(false)
-  const [step4Phase, setStep4Phase] = useState('scan') // 'scan', 'verify', 'success'
+  const [step4Phase, setStep4Phase] = useState('scan')
   const [twoFactorVerificationCode, setTwoFactorVerificationCode] = useState(['', '', '', '', '', ''])
+  const [zohoIntegrationEnabled, setZohoIntegrationEnabled] = useState(false)
+  const [showZohoForm, setShowZohoForm] = useState(false)
+  const [zohoCredentials, setZohoCredentials] = useState({
+    domain: '',
+    id: '',
+    secret: ''
+  })
 
   const steps = [
     { number: 1, title: "Company's account", active: true },
@@ -137,12 +145,15 @@ const SignupPage = () => {
 
   const handleVerificationCodeChange = (index, value) => {
     if (value.length > 1) return
+    
     const newCode = [...formData.verificationCode]
     newCode[index] = value
+    
     setFormData(prev => ({
       ...prev,
       verificationCode: newCode
     }))
+    
     if (value && index < 6) {
       const nextInput = document.getElementById(`code-${index + 1}`)
       if (nextInput) nextInput.focus()
@@ -169,9 +180,12 @@ const SignupPage = () => {
 
   const handle2FAVerificationChange = (index, value) => {
     if (value.length > 1) return
+    
     const newCode = [...twoFactorVerificationCode]
     newCode[index] = value
+    
     setTwoFactorVerificationCode(newCode)
+    
     if (value && index < 5) {
       const nextInput = document.getElementById(`twofa-${index + 1}`)
       if (nextInput) nextInput.focus()
@@ -182,16 +196,6 @@ const SignupPage = () => {
     if (e.key === 'Backspace' && !twoFactorVerificationCode[index] && index > 0) {
       const prevInput = document.getElementById(`twofa-${index - 1}`)
       if (prevInput) prevInput.focus()
-    }
-  }
-
-  const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(twoFactorCode)
-      setIsCodeCopied(true)
-      setTimeout(() => setIsCodeCopied(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy code:', err)
     }
   }
 
@@ -208,6 +212,42 @@ const SignupPage = () => {
     setTwoFactorVerificationCode(['', '', '', '', '', ''])
   }
 
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(twoFactorCode)
+      setIsCodeCopied(true)
+      setTimeout(() => setIsCodeCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy code:', err)
+    }
+  }
+
+  const handleZohoCredentialsChange = (field) => (e) => {
+    setZohoCredentials(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }))
+  }
+
+  const handleEnableZohoSync = () => {
+    if (zohoIntegrationEnabled) {
+      setShowZohoForm(true)
+    } else {
+      setShowZohoForm(false)
+      setZohoCredentials({
+        domain: '',
+        id: '',
+        secret: ''
+      })
+    }
+  }
+
+  const validateZohoCredentials = () => {
+    return zohoCredentials.domain.trim() && 
+           zohoCredentials.id.trim() && 
+           zohoCredentials.secret.trim()
+  }
+
   const validateStep1 = () => {
     const newErrors = {}
     if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required'
@@ -217,6 +257,7 @@ const SignupPage = () => {
     if (!formData.state) newErrors.state = 'State is required'
     if (!formData.localGovernment) newErrors.localGovernment = 'Local government is required'
     if (!formData.companyAddress.trim()) newErrors.companyAddress = 'Company address is required'
+    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -237,6 +278,7 @@ const SignupPage = () => {
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.adminPassword)) {
       newErrors.adminPassword = 'Password must contain uppercase, numbers and special characters and it must not be less than 8 characters'
     }
+    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -266,6 +308,9 @@ const SignupPage = () => {
     } else if (currentStep === 4 && validateStep4()) {
       setCurrentStep(5)
       console.log('2FA setup completed')
+    } else if (currentStep === 5) {
+      setCurrentStep(6)
+      console.log('Zoho sync:', zohoIntegrationEnabled ? 'enabled' : 'skipped')
     }
   }
 
@@ -286,23 +331,24 @@ const SignupPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
-          <button
+          <button 
             onClick={handleBack}
             className="flex items-center text-gray-600 hover:text-black mb-6 transition-colors"
           >
             <FaArrowLeft className="mr-2" />
           </button>
+          
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-black mb-2">Create Account</h1>
             <p className="text-gray-600">
-              {currentStep === 3 ? "Enter a verification code sent to your email" :
+              {currentStep === 3 ? "Enter a verification code sent to your email" : 
                currentStep === 4 ? "Setup two-factor authentication for extra security" :
+               currentStep === 5 ? "Setup two-factor authentication for extra security" :
                "Set up your company's payroll account"}
             </p>
           </div>
-          {/* Progress Steps */}
+
           <div className="flex items-center justify-center mb-8">
             <div className="flex items-center space-x-4 overflow-x-auto pb-4">
               {steps.map((step, index) => (
@@ -310,8 +356,8 @@ const SignupPage = () => {
                   <div className="flex flex-col items-center min-w-0">
                     <div className={`
                       w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                      ${getStepStatus(step.number) === 'current'
-                        ? 'bg-black text-white'
+                      ${getStepStatus(step.number) === 'current' 
+                        ? 'bg-black text-white' 
                         : getStepStatus(step.number) === 'completed'
                         ? 'bg-gray-800 text-white'
                         : 'bg-gray-300 text-gray-600'
@@ -323,11 +369,12 @@ const SignupPage = () => {
                       {step.title}
                     </span>
                   </div>
+                  
                   {index < steps.length - 1 && (
                     <div className={`
                       w-12 h-0.5 mx-2 mt-[-20px]
-                      ${getStepStatus(step.number) === 'completed'
-                        ? 'bg-gray-800'
+                      ${getStepStatus(step.number) === 'completed' 
+                        ? 'bg-gray-800' 
                         : 'bg-gray-300'
                       }
                     `} />
@@ -337,7 +384,7 @@ const SignupPage = () => {
             </div>
           </div>
         </div>
-        {/* Step 1 - Company Account */}
+
         {currentStep === 1 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -358,6 +405,7 @@ const SignupPage = () => {
                     <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
                   )}
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
@@ -378,6 +426,7 @@ const SignupPage = () => {
                       <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
                     )}
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
                       Company Size
@@ -398,6 +447,7 @@ const SignupPage = () => {
                     )}
                   </div>
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
@@ -418,6 +468,7 @@ const SignupPage = () => {
                       <p className="text-red-500 text-sm mt-1">{errors.country}</p>
                     )}
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
                       State
@@ -438,6 +489,7 @@ const SignupPage = () => {
                     )}
                   </div>
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
@@ -458,6 +510,7 @@ const SignupPage = () => {
                       <p className="text-red-500 text-sm mt-1">{errors.localGovernment}</p>
                     )}
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">
                       Company Address
@@ -476,11 +529,13 @@ const SignupPage = () => {
                   </div>
                 </div>
               </div>
+
               <div className="lg:col-span-1">
                 <div className="text-center">
                   <label className="block text-sm font-medium text-black mb-4">
                     Upload Logo
                   </label>
+                  
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-gray-400 transition-colors cursor-pointer">
                     <input
                       type="file"
@@ -502,6 +557,7 @@ const SignupPage = () => {
                 </div>
               </div>
             </div>
+
             <div className="flex justify-center mt-8">
               <Button
                 onClick={handleContinue}
@@ -512,7 +568,7 @@ const SignupPage = () => {
             </div>
           </div>
         )}
-        {/* Step 2 - Admin Account */}
+
         {currentStep === 2 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="max-w-2xl mx-auto space-y-6">
@@ -532,6 +588,7 @@ const SignupPage = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.adminFirstName}</p>
                 )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Admin Last Name
@@ -548,6 +605,7 @@ const SignupPage = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.adminLastName}</p>
                 )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Email Address
@@ -564,6 +622,7 @@ const SignupPage = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.adminEmail}</p>
                 )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
                   Password
@@ -594,6 +653,7 @@ const SignupPage = () => {
                 )}
               </div>
             </div>
+
             <div className="flex justify-center mt-8">
               <Button
                 onClick={handleContinue}
@@ -604,7 +664,7 @@ const SignupPage = () => {
             </div>
           </div>
         )}
-        {/* Step 3 - Email Verification */}
+
         {currentStep === 3 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="max-w-2xl mx-auto text-center">
@@ -612,9 +672,11 @@ const SignupPage = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-black rounded-lg mb-4">
                   <FaEnvelope className="text-white text-2xl" />
                 </div>
+                
                 <h2 className="text-xl font-semibold text-black mb-2">
                   Verify Your Email Address
                 </h2>
+                
                 <p className="text-gray-600 text-sm mb-2">
                   We've sent a verification code to <span className="font-semibold text-black">{formData.adminEmail}</span>
                 </p>
@@ -622,6 +684,7 @@ const SignupPage = () => {
                   Please check your inbox and enter the code below:
                 </p>
               </div>
+
               <div className="flex justify-center gap-3 mb-6">
                 {formData.verificationCode.map((digit, index) => (
                   <input
@@ -632,11 +695,12 @@ const SignupPage = () => {
                     value={digit}
                     onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
                     onKeyDown={(e) => handleVerificationKeyDown(index, e)}
-                    className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-md
+                    className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-md 
                              focus:border-black outline-none transition-colors bg-gray-50 text-black"
                   />
                 ))}
               </div>
+
               <div className="mb-8">
                 <span className="text-gray-600 text-sm">Didn't receive the email? </span>
                 <button
@@ -648,6 +712,7 @@ const SignupPage = () => {
                   {isResending ? 'Sending...' : 'Resend code'}
                 </button>
               </div>
+
               <Button
                 onClick={handleContinue}
                 disabled={!validateStep3()}
@@ -660,10 +725,11 @@ const SignupPage = () => {
             </div>
           </div>
         )}
-        {/* Step 4 - 2FA Setup */}
+
         {currentStep === 4 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="max-w-2xl mx-auto text-center">
+              
               {step4Phase === 'scan' && (
                 <>
                   <div className="mb-8">
@@ -673,6 +739,7 @@ const SignupPage = () => {
                     <p className="text-gray-600 text-sm mb-6">
                       Step 1: Open your authenticator app and scan this QR code
                     </p>
+
                     <div className="inline-block mb-6">
                       <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
                         <div className="w-40 h-40 bg-black relative">
@@ -698,6 +765,7 @@ const SignupPage = () => {
                         </div>
                       </div>
                     </div>
+
                     <div className="mb-6">
                       <span className="text-gray-600 text-sm">Don't have a QR scanner? </span>
                       <button
@@ -709,15 +777,18 @@ const SignupPage = () => {
                       </button>
                     </div>
                   </div>
+
                   {showManualSetup && (
                     <div className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex items-center justify-center mb-4">
                         <FaKey className="text-black text-lg mr-2" />
                         <h3 className="text-lg font-semibold text-black">Manual setup</h3>
                       </div>
+                      
                       <p className="text-gray-600 text-sm mb-4">
                         If you can't scan the QR code, enter this key manually in your authenticator app
                       </p>
+                      
                       <div className="flex items-center justify-center gap-2 mb-4">
                         <div className="flex-1 max-w-sm">
                           <Input
@@ -736,11 +807,13 @@ const SignupPage = () => {
                           <FaCopy className="text-lg" />
                         </button>
                       </div>
+                      
                       {isCodeCopied && (
                         <p className="text-green-600 text-sm">Code copied to clipboard!</p>
                       )}
                     </div>
                   )}
+
                   <Button
                     onClick={handleScannedCode}
                     className="px-12 py-3 text-lg font-medium"
@@ -749,6 +822,7 @@ const SignupPage = () => {
                   </Button>
                 </>
               )}
+
               {step4Phase === 'verify' && (
                 <>
                   <div className="mb-8">
@@ -758,6 +832,7 @@ const SignupPage = () => {
                     <p className="text-gray-600 text-sm mb-6">
                       Enter the 6 digits from your authenticator app
                     </p>
+
                     <div className="flex justify-center gap-3 mb-6">
                       {twoFactorVerificationCode.map((digit, index) => (
                         <input
@@ -768,11 +843,12 @@ const SignupPage = () => {
                           value={digit}
                           onChange={(e) => handle2FAVerificationChange(index, e.target.value)}
                           onKeyDown={(e) => handle2FAVerificationKeyDown(index, e)}
-                          className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-md
+                          className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-md 
                                    focus:border-black outline-none transition-colors bg-gray-50 text-black"
                         />
                       ))}
                     </div>
+
                     <div className="mb-8">
                       <span className="text-gray-600 text-sm">Having trouble? </span>
                       <button
@@ -784,6 +860,7 @@ const SignupPage = () => {
                       </button>
                     </div>
                   </div>
+
                   <Button
                     onClick={handleVerifyTwoFactor}
                     disabled={!validate2FAVerification()}
@@ -795,20 +872,24 @@ const SignupPage = () => {
                   </Button>
                 </>
               )}
+
               {step4Phase === 'success' && (
                 <>
                   <div className="mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mb-6">
                       <FaCheck className="text-white text-2xl" />
                     </div>
+
                     <h2 className="text-xl font-semibold text-black mb-4">
                       Two-Factor Authenticator Enabled!
                     </h2>
+                    
                     <p className="text-gray-600 text-sm mb-8">
                       Your AdminPayroll account has been set up successfully with email verification<br />
                       and two-factor authentication
                     </p>
                   </div>
+
                   <Button
                     onClick={handleContinue}
                     className="px-12 py-3 text-lg font-medium"
@@ -820,21 +901,221 @@ const SignupPage = () => {
             </div>
           </div>
         )}
-        {currentStep > 4 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-            <h2 className="text-xl font-semibold text-black mb-4">
-              Step {currentStep}: {steps[currentStep - 1].title}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              This step is coming soon...
-            </p>
-            <Button
-              onClick={() => setCurrentStep(currentStep + 1)}
-              className="px-8 py-2"
-              disabled={currentStep >= 6}
-            >
-              {currentStep >= 6 ? 'Completed' : 'Continue'}
-            </Button>
+
+        {currentStep === 5 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="max-w-2xl mx-auto">
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-semibold text-black mb-2">
+                  Connect with Zoho
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Sync your existing Zoho account to import company data
+                </p>
+              </div>
+
+              {!showZohoForm ? (
+                <>
+                  <div className="border-2 border-gray-200 rounded-lg p-6 mb-6">
+                    <div className="flex items-start gap-4 mb-6">
+                      <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div className="text-2xl">📦</div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-semibold text-black mb-1">
+                          Zoho Integration
+                        </h3>
+                        <p className="text-gray-600 text-sm">
+                          Sync your Zoho people or Zoho books date
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center gap-3">
+                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">Import employee data automatically</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">Sync company structure and departments</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">Keep employee records updated</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">Streamline payroll processes</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                      <span className="text-sm font-medium text-black">Enable Zoho Integration</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setZohoIntegrationEnabled(!zohoIntegrationEnabled)
+                          if (!zohoIntegrationEnabled) {
+                            handleEnableZohoSync()
+                          }
+                        }}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          zohoIntegrationEnabled ? 'bg-black' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            zohoIntegrationEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={() => {
+                        if (zohoIntegrationEnabled) {
+                          setShowZohoForm(true)
+                        }
+                      }}
+                      className={`px-12 py-3 text-lg font-medium ${
+                        zohoIntegrationEnabled ? 'bg-black' : 'bg-gray-400'
+                      }`}
+                      disabled={!zohoIntegrationEnabled}
+                    >
+                      Sync with zoho
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Zoho Credentials Form */}
+                  <div className="space-y-6 mb-8">
+                    {/* Zoho Domain */}
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-2">
+                        Zoho Domain
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <FaGlobe className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <Input
+                          type="text"
+                          value={zohoCredentials.domain}
+                          onChange={handleZohoCredentialsChange('domain')}
+                          placeholder="Yourcompany.zoho.com"
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Zoho ID */}
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-2">
+                        Zoho ID
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <FaIdCard className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <Input
+                          type="text"
+                          value={zohoCredentials.id}
+                          onChange={handleZohoCredentialsChange('id')}
+                          placeholder="Enter your zoho ID"
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Zoho Secret */}
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-2">
+                        Zoho Secret
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <FaLock className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <Input
+                          type="text"
+                          value={zohoCredentials.secret}
+                          onChange={handleZohoCredentialsChange('secret')}
+                          placeholder="Enter your zoho secret"
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleContinue}
+                      className={`px-12 py-3 text-lg font-medium ${
+                        validateZohoCredentials() ? 'bg-black' : 'bg-gray-400'
+                      }`}
+                      disabled={!validateZohoCredentials()}
+                    >
+                      Sync with zoho
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {currentStep === 6 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="max-w-2xl mx-auto text-center">
+              {/* Success Icon */}
+              <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-6">
+                  <FaCheck className="text-white text-3xl" />
+                </div>
+
+                <h2 className="text-2xl font-bold text-black mb-3">
+                  Account Create Successfully!
+                </h2>
+                
+                <p className="text-gray-600 text-base mb-8">
+                  Your AdminPayroll account has been sync with your Zoho account.
+                </p>
+              </div>
+
+              {/* Zoho Integration Status Card */}
+              <div className="inline-flex items-center gap-4 border-2 border-gray-200 rounded-lg p-4 mb-8">
+                <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="text-2xl">📦</div>
+                </div>
+                
+                <div className="text-left">
+                  <h3 className="text-base font-semibold text-black mb-1">
+                    Zoho Integration
+                  </h3>
+                  <p className="text-green-600 text-sm font-medium">
+                    Connected
+                  </p>
+                </div>
+              </div>
+
+              {/* Final Message */}
+              <p className="text-gray-600 text-base mb-8">
+                You can now access your dashboard and start managing your payroll.
+              </p>
+
+              {/* Go to Dashboard Button */}
+              <Button
+                onClick={() => router.push('/overview')}
+                className="px-12 py-3 text-lg font-medium"
+              >
+                Go To Dashboard
+              </Button>
+            </div>
           </div>
         )}
       </div>
