@@ -6,7 +6,12 @@ WORKDIR /app
 COPY . .
 
 
-RUN npm install && npm run build
+RUN npm ci --legacy-peer-deps
+
+RUN npm audit fix --force || true
+
+
+RUN npm run build
 
 
 EXPOSE 3000
