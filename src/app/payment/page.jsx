@@ -16,11 +16,15 @@ const Payment = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterValue, setFilterValue] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('11,sept 2025');
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPaymentSelectionModal, setShowPaymentSelectionModal] = useState(false);
   const [showPaymentProcessModal, setShowPaymentProcessModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [totalPaidAmount, setTotalPaidAmount] = useState(0);
+  
+  // New state for year and month selection
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedMonthDropdown, setSelectedMonthDropdown] = useState('');
 
   const [paymentData, setPaymentData] = useState([
     { 
@@ -134,6 +138,26 @@ const Payment = () => {
   const paidStaff = paymentData.filter(emp => emp.paymentStatus === 'Paid').length;
   const unpaidStaff = totalStaff - paidStaff;
 
+  // Generate years array (current year and 5 years back)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
+
+  // Months array
+  const months = [
+    { value: 'january', label: 'January' },
+    { value: 'february', label: 'February' },
+    { value: 'march', label: 'March' },
+    { value: 'april', label: 'April' },
+    { value: 'may', label: 'May' },
+    { value: 'june', label: 'June' },
+    { value: 'july', label: 'July' },
+    { value: 'august', label: 'August' },
+    { value: 'september', label: 'September' },
+    { value: 'october', label: 'October' },
+    { value: 'november', label: 'November' },
+    { value: 'december', label: 'December' }
+  ];
+
   // Handle checkbox selection
   const handleSelectEmployee = (employeeId, checked) => {
     if (checked) {
@@ -233,7 +257,7 @@ const Payment = () => {
 
   const handlePay = () => {
     if (selectedEmployees.length > 0) {
-      setShowConfirmModal(true);
+      setShowPaymentSelectionModal(true);
     }
   };
 
@@ -258,9 +282,18 @@ const Payment = () => {
     };
   };
 
-  // Modified to show payment process modal instead of immediately processing
-  const handleContinueToPayment = () => {
-    setShowConfirmModal(false);
+  // Handle continue from payment selection modal
+  const handleContinueToPaymentProcess = () => {
+    if (!selectedYear || !selectedMonthDropdown) {
+      alert('Please select both year and month');
+      return;
+    }
+    
+    // Format the selected month for display
+    const monthLabel = months.find(m => m.value === selectedMonthDropdown)?.label;
+    setSelectedMonth(`${monthLabel} ${selectedYear}`);
+    
+    setShowPaymentSelectionModal(false);
     setShowPaymentProcessModal(true);
   };
 
@@ -285,6 +318,8 @@ const Payment = () => {
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
     setSelectedEmployees([]);
+    setSelectedYear('');
+    setSelectedMonthDropdown('');
   };
 
   const handleSearch = (e) => {
@@ -377,45 +412,43 @@ const Payment = () => {
           </div>
         </div>
 
-      {/* Search and Filter Section */}
-<div className="flex items-center justify-end gap-4">
-  <div className="flex items-center gap-2">
-    <SearchInput
-      value={searchTerm}
-      onChange={handleSearch}
-      placeholder="Search"
-    />
-    <span className="text-sm text-gray-600">
-      Selected: {selectedEmployees.length} of {filteredData.length}
-    </span>
-  </div>
-  
-  <div className="flex items-center gap-4">
-    {/* Filter Select */}
-    <Select
-      value={filterValue}
-      onChange={handleFilterChange}
-      placeholder="Filter"
-      className="w-32"
-    >
-      <option value="">All</option>
-      <option value="paid">Paid</option>
-      <option value="unpaid">Unpaid</option>
-      <option value="active">Active</option>
-      <option value="on-leave">On Leave</option>
-    </Select>
+        {/* Search and Filter Section */}
+        <div className="flex items-center justify-end gap-4">
+          <div className="flex items-center gap-2">
+            <SearchInput
+              value={searchTerm}
+              onChange={handleSearch}
+              placeholder="Search"
+            />
+            <span className="text-sm text-gray-600">
+              Selected: {selectedEmployees.length} of {filteredData.length}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {/* Filter Select */}
+            <Select
+              value={filterValue}
+              onChange={handleFilterChange}
+              placeholder="Filter"
+              className="w-32"
+            >
+              <option value="">All</option>
+              <option value="paid">Paid</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="active">Active</option>
+              <option value="on-leave">On Leave</option>
+            </Select>
 
-    {/* 📅 Month Picker instead of Select */}
-    <input
-      type="month"
-      value={selectedMonth}
-      onChange={(e) => setSelectedMonth(e.target.value)}
-      className="w-40 border border-gray-300 rounded-md px-3 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black"
-    />
-  </div>
-</div>
-
-
+            {/* Month Picker */}
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-40 border border-gray-300 rounded-md px-3 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black"
+            />
+          </div>
+        </div>
 
         {/* Table Section */}
         <div className="bg-white rounded-lg border border-gray-300">
@@ -435,51 +468,62 @@ const Payment = () => {
           onPageChange={handlePageChange}
         />
 
-        {/* Review Payment Modal */}
-        <Modal open={showConfirmModal} setOpen={setShowConfirmModal}>
+        {/* Payment Selection Modal (NEW) */}
+        <Modal open={showPaymentSelectionModal} setOpen={setShowPaymentSelectionModal}>
           <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-black">Review Salary Payment</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-black">Payment</h2>
               <button 
-                onClick={() => setShowConfirmModal(false)}
+                onClick={() => setShowPaymentSelectionModal(false)}
                 className="text-gray-500 hover:text-gray-700 transition-colors"
               >
                 <FaTimes size={16} />
               </button>
             </div>
 
+            <p className="text-sm text-gray-600 mb-6">
+              Select the month and year to continue payment processing.
+            </p>
+
             <div className="space-y-4 mb-6">
-              <p className="text-sm text-gray-600">
-                You are about to process salary payment for the following staff members:
-              </p>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Payment month:</span>
-                <span className="font-medium text-black">{selectedMonth}</span>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-black">Staff Members:</h3>
-                <div className="space-y-1 max-h-40 overflow-y-auto">
-                  {getSelectedEmployeesData().map((employee) => (
-                    <div key={employee.id} className="flex items-center justify-between text-sm py-1">
-                      <span className="text-gray-700">{employee.name}</span>
-                      <span className="font-medium text-black">{formatCurrency(employee.netSalary)}</span>
-                    </div>
+              {/* Year Select */}
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Year</label>
+                <Select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  placeholder="Select year"
+                >
+                  {years.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
                   ))}
-                </div>
+                </Select>
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                <span className="font-medium text-black">Total Amount</span>
-                <span className="font-bold text-lg text-black">{formatCurrency(calculateTotalAmount())}</span>
+              {/* Month Select */}
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Month</label>
+                <Select
+                  value={selectedMonthDropdown}
+                  onChange={(e) => setSelectedMonthDropdown(e.target.value)}
+                  placeholder="Select month"
+                >
+                  {months.map((month) => (
+                    <option key={month.value} value={month.value}>
+                      {month.label}
+                    </option>
+                  ))}
+                </Select>
               </div>
             </div>
 
             <Button 
-              onClick={handleContinueToPayment}
+              onClick={handleContinueToPaymentProcess}
               className="w-full bg-black hover:bg-gray-800"
             >
-              Continue
+              Process Payment
             </Button>
           </div>
         </Modal>

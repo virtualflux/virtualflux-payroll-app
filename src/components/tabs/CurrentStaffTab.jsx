@@ -420,7 +420,7 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 mt-6">
-                          <Button
+                          {/* <Button
                             onClick={() => handleEditStaff(row)}
                             className="px-4 py-2 text-xs border border-gray-300 text-white bg-black hover:bg-gray-50 rounded"
                           >
@@ -431,13 +431,13 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
                             className="px-4 py-2 text-xs border border-gray-300 text-white bg-black rounded"
                           >
                             Delete Staff
-                          </Button>
-                          <Button
+                          </Button> */}
+                          {/* <Button
                             onClick={() => handleTerminateEmployment(row)}
                             className="px-4 py-2 text-xs border border-red-300 text-white bg-red-600 rounded"
                           >
                             Terminate Employment
-                          </Button>
+                          </Button> */}
                         </div>
                       </td>
                     </tr>

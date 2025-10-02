@@ -240,13 +240,13 @@ const ManageStaff = () => {
               handlePageChange={handlePageChange}
             />
           </Tab>
-          <Tab title="Terminated staff">
+          {/* <Tab title="Terminated staff">
             <TerminatedStaffTab
               currentPage={currentPage}
               totalPages={totalPages}
               handlePageChange={handlePageChange}
             />
-          </Tab>
+          </Tab> */}
         </Tabs>
       </div>
     </Container>
