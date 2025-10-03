@@ -1,480 +1,54 @@
-// 'use client'
-
-// import React, { useState } from 'react'
-// import Button from '@/components/ui/Button'
-// import Modal from '@/components/ui/Modal'
-// import Input from '@/components/ui/Input'
-// import { FiPlus, FiArrowUp, FiSend, FiRotateCcw, FiArrowDown, FiX, FiCreditCard, FiDollarSign } from 'react-icons/fi'
-// import Container from '@/components/ui/Container'
-
-// const FundWallet = () => {
-//   const [isModalOpen, setIsModalOpen] = useState(false)
-//   const [modalStep, setModalStep] = useState(1)
-//   const [depositAmount, setDepositAmount] = useState('')
-//   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('')
-
-//   const currentBalance = 20000000
-
-//   const transactions = [
-//     {
-//       id: 1,
-//       type: 'Wallet funding',
-//       method: 'Bank transfer .... 8976',
-//       amount: '+5,000,000',
-//       date: 'Jun 12, 2023'
-//     },
-//     {
-//       id: 2,
-//       type: 'Wallet funding',
-//       method: 'Card transfer .... 9765',
-//       amount: '+5000.00',
-//       date: 'Aug 12, 2023'
-//     },
-//     {
-//       id: 3,
-//       type: 'Wallet funding',
-//       method: 'Bank transfer .... 8976',
-//       amount: '+7,000,000',
-//       date: 'may 12, 2024'
-//     },
-//     {
-//       id: 4,
-//       type: 'Wallet funding',
-//       method: 'Card transfer .... 9765',
-//       amount: '+1,000,000',
-//       date: 'July 15, 2025'
-//     }
-//   ]
-
-//   const openModal = () => {
-//     setIsModalOpen(true)
-//     setModalStep(1)
-//     setDepositAmount('')
-//     setSelectedPaymentMethod('')
-//   }
-
-//   const closeModal = () => {
-//     setIsModalOpen(false)
-//     setModalStep(1)
-//   }
-
-//   const handleContinueStep1 = () => {
-//     if (depositAmount && parseFloat(depositAmount) > 0) {
-//       setModalStep(2)
-//     }
-//   }
-
-//   const handleContinueStep2 = () => {
-//     if (selectedPaymentMethod) {
-//       if (selectedPaymentMethod === 'bank') {
-//         setModalStep(3)
-//       } else {
-//         console.log('Processing deposit:', {
-//           amount: depositAmount,
-//           method: selectedPaymentMethod
-//         })
-//         closeModal()
-//       }
-//     }
-//   }
-
-//   const handleContinueStep3 = () => {
-//     console.log('Processing bank transfer deposit:', {
-//       amount: depositAmount,
-//       method: selectedPaymentMethod
-//     })
-//     setModalStep(4)
-//   }
-
-//   const handleDone = () => {
-//     closeModal()
-//   }
-
-//   const formatCurrency = (amount) => {
-//     return new Intl.NumberFormat('en-NG', {
-//       style: 'currency',
-//       currency: 'NGN',
-//       minimumFractionDigits: 0
-//     }).format(amount)
-//   }
-
-//   return (
-//     <Container> 
-//       <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
-//         {/* Header */}
-//         <div className="mb-6 sm:mb-8">
-//           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Fund Wallet</h1>
-//         </div>
-
-//         {/* Main Content Grid */}
-//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-          
-//           {/* Left Side - Current Balance */}
-//           <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200">
-//             <div className="mb-4 sm:mb-6">
-//               <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-10 text-start">Current Balance</p>
-//               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">₦20,000,000</h1>
-//             </div>
-            
-//             {/* Action Buttons */}
-//             <div className="flex flex-wrap gap-2 sm:gap-3">
-//               <Button 
-//                 className="flex flex-col items-center gap-0 bg-black hover:bg-gray-800 text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4"
-//                 onClick={openModal}
-//               >
-//                 <FiPlus size={14} className="sm:w-4 sm:h-4" />
-//                 Fund wallet
-//               </Button>
-//               <Button className="flex flex-col items-center gap-0 bg-black hover:bg-gray-800 text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4">
-//                 <FiArrowUp size={14} className="sm:w-4 sm:h-4" />
-//                 Withdraw
-//               </Button>
-//               <Button className="flex flex-col items-center gap-0 bg-black hover:bg-gray-800 text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4">
-//                 <FiSend size={14} className="sm:w-4 sm:h-4" />
-//                 Transfer
-//               </Button>
-//             </div>
-//           </div>
-
-//           {/* Right Side - Balance Display */}
-//           <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 flex flex-col gap-6 sm:gap-15 items-start justify-start">
-//             <div className="w-full text-center">
-//               <p className="text-xs sm:text-sm text-gray-500 mb-1">Current Balance</p>
-//               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">₦20,000,000</h1>
-//             </div>
-
-//             <div className="w-full">
-//               <div className="grid grid-cols-3 gap-2 sm:gap-4">
-//                 {/* Total Funding */}
-//                 <div className="text-center">
-//                   <p className="text-base sm:text-lg font-bold text-gray-900">₦ 10,000,000</p>
-//                   <p className="text-xs text-gray-500">Total Funding</p>
-//                 </div>
-
-//                 {/* Total Payment */}
-//                 <div className="text-center">
-//                   <p className="text-base sm:text-lg font-bold text-gray-900">₦ 5,000,000</p>
-//                   <p className="text-xs text-gray-500">Total Payment</p>
-//                 </div>
-
-//                 {/* Transactions */}
-//                 <div className="text-center">
-//                   <p className="text-base sm:text-lg font-bold text-gray-900">90</p>
-//                   <p className="text-xs text-gray-500">Transactions</p>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Recent Transactions */}
-//         <div className="bg-white rounded-lg border border-gray-200">
-//           <div className="p-4 sm:p-6 border-b border-gray-200">
-//             <div className="flex items-center justify-between">
-//               <div className="flex items-center gap-2">
-//                 <FiRotateCcw size={16} className="text-gray-500 sm:w-5 sm:h-5" />
-//                 <h2 className="text-base sm:text-lg font-medium text-gray-900">Recent transaction</h2>
-//               </div>
-//               <button className="text-blue-600 hover:underline text-xs sm:text-sm">see all</button>
-//             </div>
-//           </div>
-
-//           <div className="divide-y divide-gray-100">
-//             {transactions.map((transaction) => (
-//               <div key={transaction.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-gray-50">
-//                 <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-//                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
-//                     <FiArrowDown size={16} className="text-blue-600 sm:w-4.5 sm:h-4.5" />
-//                   </div>
-//                   <div>
-//                     <h3 className="font-medium text-gray-900 text-sm sm:text-base mb-1">{transaction.type}</h3>
-//                     <p className="text-xs sm:text-sm text-gray-500">{transaction.method}</p>
-//                   </div>
-//                 </div>
-//                 <div className="text-left sm:text-right mt-3 sm:mt-0 w-full sm:w-auto">
-//                   <p className="font-medium text-blue-600 text-sm sm:text-base mb-1">{transaction.amount}</p>
-//                   <p className="text-xs sm:text-sm text-gray-500">{transaction.date}</p>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-
-//         {/* Deposit Modal - Unchanged as per request */}
-//         <Modal open={isModalOpen} setOpen={setIsModalOpen}>
-//           <div className="p-6">
-//             {modalStep !== 4 && (
-//               <div className="flex items-center justify-between mb-6">
-//                 <h2 className="text-xl font-semibold text-gray-900">Deposit</h2>
-//                 <button 
-//                   onClick={closeModal}
-//                   className="text-gray-400 hover:text-gray-600"
-//                 >
-//                   <FiX size={20} />
-//                 </button>
-//               </div>
-//             )}
-
-//             {modalStep === 1 && (
-//               <div>
-//                 <div className="mb-6">
-//                   <p className="text-sm text-gray-500 mb-2">Total balance</p>
-//                   <h3 className="text-2xl font-bold text-gray-900">
-//                     {formatCurrency(currentBalance)}
-//                   </h3>
-//                 </div>
-
-//                 <div className="mb-6">
-//                   <label className="block text-sm font-medium text-gray-700 mb-2">
-//                     Enter amount
-//                   </label>
-//                   <div className="relative">
-//                     <span className="absolute left-3 top-2.5 text-gray-500">₦</span>
-//                     <Input
-//                       type="number"
-//                       className="pl-8"
-//                       placeholder="1,000,000"
-//                       value={depositAmount}
-//                       onChange={(e) => setDepositAmount(e.target.value)}
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <Button 
-//                   className="w-full"
-//                   onClick={handleContinueStep1}
-//                   disabled={!depositAmount || parseFloat(depositAmount) <= 0}
-//                 >
-//                   Continue
-//                 </Button>
-//               </div>
-//             )}
-
-//             {modalStep === 2 && (
-//               <div>
-//                 <div className="mb-6">
-//                   <p className="text-sm text-gray-500 mb-2">Total balance</p>
-//                   <h3 className="text-2xl font-bold text-gray-900">
-//                     {formatCurrency(currentBalance)}
-//                   </h3>
-//                 </div>
-
-//                 <div className="mb-6">
-//                   <h4 className="text-lg font-medium text-gray-900 mb-4">Select payment method</h4>
-                  
-//                   <div 
-//                     className={`border-2 rounded-lg p-4 mb-3 cursor-pointer transition-all ${
-//                       selectedPaymentMethod === 'bank' 
-//                         ? 'border-blue-500 bg-blue-50' 
-//                         : 'border-gray-200 hover:border-gray-300'
-//                     }`}
-//                     onClick={() => setSelectedPaymentMethod('bank')}
-//                   >
-//                     <div className="flex items-center justify-between">
-//                       <div className="flex items-center gap-3">
-//                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-//                           <FiDollarSign size={18} className="text-gray-600" />
-//                         </div>
-//                         <span className="font-medium text-gray-900">Bank account</span>
-//                       </div>
-//                       <div className={`w-5 h-5 rounded-full border-2 ${
-//                         selectedPaymentMethod === 'bank' 
-//                           ? 'border-blue-500 bg-blue-500' 
-//                           : 'border-gray-300'
-//                       }`}>
-//                         {selectedPaymentMethod === 'bank' && (
-//                           <div className="w-full h-full rounded-full bg-blue-500 flex items-center justify-center">
-//                             <div className="w-2 h-2 bg-white rounded-full"></div>
-//                           </div>
-//                         )}
-//                       </div>
-//                     </div>
-//                   </div>
-
-//                   <div 
-//                     className={`border-2 rounded-lg p-4 mb-3 cursor-pointer transition-all ${
-//                       selectedPaymentMethod === 'card' 
-//                         ? 'border-blue-500 bg-blue-50' 
-//                         : 'border-gray-200 hover:border-gray-300'
-//                     }`}
-//                     onClick={() => setSelectedPaymentMethod('card')}
-//                   >
-//                     <div className="flex items-center justify-between">
-//                       <div className="flex items-center gap-3">
-//                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-//                           <FiCreditCard size={18} className="text-gray-600" />
-//                         </div>
-//                         <span className="font-medium text-gray-900">Credit card</span>
-//                       </div>
-//                       <div className={`w-5 h-5 rounded-full border-2 ${
-//                         selectedPaymentMethod === 'card' 
-//                           ? 'border-blue-500 bg-blue-500' 
-//                           : 'border-gray-300'
-//                       }`}>
-//                         {selectedPaymentMethod === 'card' && (
-//                           <div className="w-full h-full rounded-full bg-blue-500 flex items-center justify-center">
-//                             <div className="w-2 h-2 bg-white rounded-full"></div>
-//                           </div>
-//                         )}
-//                       </div>
-//                     </div>
-//                   </div>
-
-//                   <div 
-//                     className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-//                       selectedPaymentMethod === 'code' 
-//                         ? 'border-blue-500 bg-blue-50' 
-//                         : 'border-gray-200 hover:border-gray-300'
-//                     }`}
-//                     onClick={() => setSelectedPaymentMethod('code')}
-//                   >
-//                     <div className="flex items-center justify-between">
-//                       <div className="flex items-center gap-3">
-//                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-//                           <span className="text-gray-600 font-bold text-lg">#</span>
-//                         </div>
-//                         <span className="font-medium text-gray-900">USSD code</span>
-//                       </div>
-//                       <div className={`w-5 h-5 rounded-full border-2 ${
-//                         selectedPaymentMethod === 'code' 
-//                           ? 'border-blue-500 bg-blue-500' 
-//                           : 'border-gray-300'
-//                       }`}>
-//                         {selectedPaymentMethod === 'code' && (
-//                           <div className="w-full h-full rounded-full bg-blue-500 flex items-center justify-center">
-//                             <div className="w-2 h-2 bg-white rounded-full"></div>
-//                           </div>
-//                         )}
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-
-//                 <Button 
-//                   className="w-full"
-//                   onClick={handleContinueStep2}
-//                   disabled={!selectedPaymentMethod}
-//                 >
-//                   Continue
-//                 </Button>
-//               </div>
-//             )}
-
-//             {modalStep === 3 && (
-//               <div>
-//                 <div className="mb-6">
-//                   <h4 className="text-lg font-medium text-gray-900">Bank transfer details</h4>
-//                 </div>
-
-//                 <div className="space-y-4 mb-6">
-//                   <div className="flex items-center justify-between">
-//                     <p className="text-sm text-gray-500">Bank Name</p>
-//                     <p className="text-sm font-medium text-gray-900">Global Bank Inc</p>
-//                   </div>
-
-//                   <div className="flex items-center justify-between">
-//                     <p className="text-sm text-gray-500">Account Name</p>
-//                     <p className="text-sm font-medium text-gray-900">Virtualflux Payroll Limited</p>
-//                   </div>
-
-//                   <div className="flex items-center justify-between">
-//                     <p className="text-sm text-gray-500">Account Number</p>
-//                     <p className="text-sm font-medium text-gray-900">3134524177</p>
-//                   </div>
-
-//                   <div className="flex items-center justify-between">
-//                     <p className="text-sm text-gray-500">Routing Number</p>
-//                     <p className="text-sm font-medium text-gray-900">021000003</p>
-//                   </div>
-
-//                   <div className="flex items-center justify-between">
-//                     <p className="text-sm text-gray-500">Reference Code</p>
-//                     <p className="text-sm font-medium text-gray-900">FLUXPAY-789345</p>
-//                   </div>
-
-//                   <div className="flex items-center justify-between">
-//                     <p className="text-sm text-gray-500">Amount to Transfer</p>
-//                     <p className="text-sm font-medium text-gray-900">
-//                       ₦{parseFloat(depositAmount).toLocaleString()}
-//                     </p>
-//                   </div>
-//                 </div>
-
-//                 <div className="mb-6">
-//                   <label className="flex items-center gap-3 cursor-pointer">
-//                     <input
-//                       type="checkbox"
-//                       className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-//                     />
-//                     <span className="text-sm text-gray-700">Yes, I've made payment</span>
-//                   </label>
-//                 </div>
-
-//                 <Button 
-//                   className="w-full"
-//                   onClick={handleContinueStep3}
-//                 >
-//                   Continue
-//                 </Button>
-//               </div>
-//             )}
-
-//             {modalStep === 4 && (
-//               <div className="text-center py-8">
-//                 <div className="absolute top-6 right-6">
-//                   <button 
-//                     onClick={closeModal}
-//                     className="text-gray-400 hover:text-gray-600"
-//                   >
-//                     <FiX size={20} />
-//                   </button>
-//                 </div>
-
-//                 <div className="mb-6 flex justify-center">
-//                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-//                     <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-//                     </svg>
-//                   </div>
-//                 </div>
-
-//                 <div className="mb-8">
-//                   <h3 className="text-xl font-semibold text-gray-900 mb-3">Deposit Successful</h3>
-//                   <p className="text-sm text-gray-500 px-4">
-//                     You have successfully deposited ₦{parseFloat(depositAmount).toLocaleString()} to virtualflux payroll limited
-//                   </p>
-//                 </div>
-
-//                 <Button 
-//                   className="w-full bg-black hover:bg-gray-800"
-//                   onClick={handleDone}
-//                 >
-//                   Done
-//                 </Button>
-//               </div>
-//             )}
-//           </div>
-//         </Modal>
-//       </div>
-//     </Container>
-//   )
-// }
-
-// export default FundWallet
-
 'use client'
 
 import React, { useState } from 'react'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
 import Input from '@/components/ui/Input'
+import Select from '@/components/ui/Select'
 import { FiPlus, FiArrowUp, FiSend, FiRotateCcw, FiArrowDown, FiX } from 'react-icons/fi'
 import Container from '@/components/ui/Container'
 
 const FundWallet = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
+  const [withdrawStep, setWithdrawStep] = useState(1)
   const [depositAmount, setDepositAmount] = useState('')
+  const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [selectedBank, setSelectedBank] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [accountName, setAccountName] = useState('')
+  const [rememberAccount, setRememberAccount] = useState(false)
+  const [withdrawPassword, setWithdrawPassword] = useState('')
+  const [otpValues, setOtpValues] = useState(['', '', '', '', '', ''])
+  const [destination, setDestination] = useState('')
   const currentBalance = 20000000
+
+  // Nigerian Banks
+  const nigerianBanks = [
+    'Access Bank',
+    'Citibank Nigeria',
+    'Ecobank Nigeria',
+    'Fidelity Bank',
+    'First Bank of Nigeria',
+    'First City Monument Bank (FCMB)',
+    'Globus Bank',
+    'Guaranty Trust Bank (GTBank)',
+    'Heritage Bank',
+    'Keystone Bank',
+    'Parallex Bank',
+    'Polaris Bank',
+    'Providus Bank',
+    'Stanbic IBTC Bank',
+    'Standard Chartered Bank',
+    'Sterling Bank',
+    'SunTrust Bank',
+    'Titan Trust Bank',
+    'Union Bank of Nigeria',
+    'United Bank for Africa (UBA)',
+    'Unity Bank',
+    'Wema Bank',
+    'Zenith Bank'
+  ]
 
   // dummy transactions
   const transactions = [
@@ -484,15 +58,78 @@ const FundWallet = () => {
     { id: 4, type: 'Wallet funding', method: 'Card transfer .... 9765', amount: '+1,000,000', date: 'July 15, 2025' }
   ]
 
-  const openModal = () => {
-    setIsModalOpen(true)
+  const openDepositModal = () => {
+    setIsDepositModalOpen(true)
     setDepositAmount('')
   }
 
-  const closeModal = () => {
-    setIsModalOpen(false)
+  const closeDepositModal = () => {
+    setIsDepositModalOpen(false)
     setDepositAmount('')
   }
+
+  const openWithdrawModal = () => {
+    setIsWithdrawModalOpen(true)
+    setWithdrawStep(1)
+    setWithdrawAmount('')
+    setSelectedBank('')
+    setAccountNumber('')
+    setAccountName('')
+    setRememberAccount(false)
+    setWithdrawPassword('')
+    setOtpValues(['', '', '', '', '', ''])
+    setDestination('')
+  }
+
+  const closeWithdrawModal = () => {
+    setIsWithdrawModalOpen(false)
+    setWithdrawStep(1)
+  }
+
+  const handleWithdrawContinue = () => {
+    if (withdrawStep === 1 && withdrawAmount && selectedBank && accountNumber) {
+      setWithdrawStep(2)
+    } else if (withdrawStep === 2 && withdrawPassword) {
+      // Move to OTP verification
+      setWithdrawStep(3)
+    } else if (withdrawStep === 3 && otpValues.every(val => val !== '')) {
+      // Move to confirmation
+      setWithdrawStep(4)
+    } else if (withdrawStep === 4) {
+      // Move to success screen
+      setWithdrawStep(5)
+    } else if (withdrawStep === 5) {
+      // Close modal after viewing success
+      closeWithdrawModal()
+    }
+  }
+
+  const handleOtpChange = (index, value) => {
+    if (value.length > 1) return
+    
+    const newOtpValues = [...otpValues]
+    newOtpValues[index] = value
+    setOtpValues(newOtpValues)
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-${index + 1}`)
+      if (nextInput) nextInput.focus()
+    }
+  }
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`)
+      if (prevInput) prevInput.focus()
+    }
+  }
+
+  // Calculate withdrawal fees
+  const withdrawalAmount = parseFloat(withdrawAmount) || 0
+  const processingFee = withdrawalAmount * 0.01 // 1%
+  const nuboxxFee = 0
+  const amountToReceive = withdrawalAmount - processingFee - nuboxxFee
 
   // call backend to get Paystack URL
   const handleFundWallet = async () => {
@@ -549,18 +186,17 @@ const FundWallet = () => {
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button 
                 className="flex flex-col items-center gap-0 bg-black hover:bg-gray-800 text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4"
-                onClick={openModal}
+                onClick={openDepositModal}
               >
                 <FiPlus size={14} className="sm:w-4 sm:h-4" />
                 Fund wallet
               </Button>
-              <Button className="flex flex-col items-center gap-0 bg-black hover:bg-gray-800 text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4">
+              <Button 
+                className="flex flex-col items-center gap-0 bg-black hover:bg-gray-800 text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4"
+                onClick={openWithdrawModal}
+              >
                 <FiArrowUp size={14} className="sm:w-4 sm:h-4" />
                 Withdraw
-              </Button>
-              <Button className="flex flex-col items-center gap-0 bg-black hover:bg-gray-800 text-xs sm:text-sm py-2 sm:py-3 px-3 sm:px-4">
-                <FiSend size={14} className="sm:w-4 sm:h-4" />
-                Transfer
               </Button>
             </div>
           </div>
@@ -624,13 +260,13 @@ const FundWallet = () => {
           </div>
         </div>
 
-        {/* Deposit Modal - Simplified */}
-        <Modal open={isModalOpen} setOpen={setIsModalOpen}>
+        {/* Deposit Modal */}
+        <Modal open={isDepositModalOpen} setOpen={setIsDepositModalOpen}>
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Deposit</h2>
               <button 
-                onClick={closeModal}
+                onClick={closeDepositModal}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <FiX size={20} />
@@ -667,6 +303,366 @@ const FundWallet = () => {
             >
               Continue
             </Button>
+          </div>
+        </Modal>
+
+        {/* Withdraw Modal */}
+        <Modal open={isWithdrawModalOpen} setOpen={setIsWithdrawModalOpen}>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Withdraw</h2>
+              <button 
+                onClick={closeWithdrawModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {withdrawStep === 1 && (
+              <div>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Withdrawal Amount
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-gray-500">₦</span>
+                    <Input
+                      type="number"
+                      className="pl-8"
+                      placeholder="1,000,000"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Available Balance: ₦{currentBalance.toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bank Name
+                  </label>
+                  <Select
+                    placeholder="Select Bank"
+                    value={selectedBank}
+                    onChange={(e) => setSelectedBank(e.target.value)}
+                  >
+                    {nigerianBanks.map((bank) => (
+                      <option key={bank} value={bank}>
+                        {bank}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter Account Number
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="2230980291"
+                    value={accountNumber}
+                    onChange={(e) => {
+                      setAccountNumber(e.target.value)
+                      // Simulate account name lookup
+                      if (e.target.value.length === 10) {
+                        setAccountName('Fidelity Save')
+                      }
+                    }}
+                  />
+                </div>
+
+                {accountName && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Account name
+                    </label>
+                    <div className="w-full h-10 p-2 border-2 border-gray-300 rounded-md bg-gray-50 text-sm flex items-center text-gray-500">
+                      {accountName}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-6">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={rememberAccount}
+                        onChange={(e) => setRememberAccount(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${
+                        rememberAccount ? 'bg-black' : 'bg-gray-300'
+                      }`}>
+                        <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                          rememberAccount ? 'transform translate-x-5' : ''
+                        }`}></div>
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-700">Remember and save this account</span>
+                  </label>
+                </div>
+
+                <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Fees Calculation</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Withdrawal Amount:</span>
+                      <span className="text-gray-900 font-medium">
+                        ₦{withdrawalAmount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Processing Fee (1%):</span>
+                      <span className="text-gray-900 font-medium">
+                        ₦{processingFee.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Nuboxx Fee:</span>
+                      <span className="text-gray-900 font-medium">
+                        ₦{nuboxxFee.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="border-t border-gray-300 pt-2 mt-2">
+                      <div className="flex justify-between text-sm font-semibold">
+                        <span className="text-gray-900">Amount Receive:</span>
+                        <span className="text-gray-900">
+                          ₦{amountToReceive.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    className="flex-1 bg-white text-gray-900 border-2 border-gray-300 hover:bg-gray-50"
+                    onClick={closeWithdrawModal}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-black hover:bg-gray-800"
+                    onClick={handleWithdrawContinue}
+                    disabled={!withdrawAmount || !selectedBank || !accountNumber || parseFloat(withdrawAmount) <= 0}
+                  >
+                    Continue
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {withdrawStep === 2 && (
+              <div>
+                <div className="mb-6 text-center">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <FiX size={24} className="text-gray-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Security Verification</h3>
+                  <p className="text-sm text-gray-500">
+                    For security reason, we need to verify your identity before processing this withdrawal.
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Password
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="Enter your account password"
+                    value={withdrawPassword}
+                    onChange={(e) => setWithdrawPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    className="flex-1 bg-white text-gray-900 border-2 border-gray-300 hover:bg-gray-50"
+                    onClick={() => setWithdrawStep(1)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-black hover:bg-gray-800"
+                    onClick={handleWithdrawContinue}
+                    disabled={!withdrawPassword}
+                  >
+                    Continue
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {withdrawStep === 3 && (
+              <div>
+                <div className="mb-6 text-center">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Multi-factor Auth</h3>
+                  <p className="text-sm text-gray-500">
+                    In order to complete this withdrawal, provide the OTP code sent to <span className="font-medium text-gray-900">company@business.com</span>
+                  </p>
+                </div>
+
+                <div className="mb-6 flex justify-center gap-2">
+                  {otpValues.map((value, index) => (
+                    <input
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      maxLength={1}
+                      value={value}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-md bg-gray-50 focus:border-black outline-none transition-all"
+                    />
+                  ))}
+                </div>
+
+                <Button 
+                  className="w-full bg-black hover:bg-gray-800"
+                  onClick={handleWithdrawContinue}
+                  disabled={!otpValues.every(val => val !== '')}
+                >
+                  Continue
+                </Button>
+              </div>
+            )}
+
+            {withdrawStep === 4 && (
+              <div>
+                <div className="mb-6 text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Withdrawal Details</h3>
+                  <p className="text-sm text-gray-500">
+                    Please review all details before confirming
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fees Calculation
+                  </label>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Withdrawal Amount:</span>
+                      <span className="text-gray-900 font-medium">
+                        ₦{withdrawalAmount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Processing Fee (1%):</span>
+                      <span className="text-gray-900 font-medium">
+                        ₦{processingFee.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Network Fee:</span>
+                      <span className="text-gray-900 font-medium">
+                        ₦{nuboxxFee.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="border-t border-gray-300 pt-2.5 mt-2">
+                      <div className="flex justify-between text-sm font-semibold">
+                        <span className="text-gray-900">Amount Receive:</span>
+                        <span className="text-gray-900">
+                          ₦{amountToReceive.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Destination
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="Access Bank(******0891)"
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    className="flex-1 bg-white text-gray-900 border-2 border-gray-300 hover:bg-gray-50"
+                    onClick={closeWithdrawModal}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-black hover:bg-gray-800"
+                    onClick={handleWithdrawContinue}
+                  >
+                    Continue
+                  </Button>
+                </div>
+              </div>
+            )}
+            {withdrawStep === 5 && (
+              <div>
+                <div className="mb-6 text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Withdrawal Processed Successfully!</h3>
+                </div>
+
+                <div className="mb-6 bg-gray-50 p-4 rounded-lg space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Transaction ID</span>
+                    <span className="text-sm text-gray-900 font-medium">TX-789547239</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Amount</span>
+                    <span className="text-sm text-red-600 font-medium">₦{withdrawalAmount.toLocaleString()}.00</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Destination</span>
+                    <span className="text-sm text-gray-900 font-medium">{selectedBank}(******{accountNumber.slice(-4)})</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Date</span>
+                    <span className="text-sm text-gray-900 font-medium">
+                      {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Status</span>
+                    <span className="text-sm text-green-600 font-medium">Processing</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    className="flex-1 bg-white text-gray-900 border-2 border-gray-300 hover:bg-gray-50"
+                    onClick={closeWithdrawModal}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-black hover:bg-gray-800"
+                    onClick={handleWithdrawContinue}
+                  >
+                    Continue
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </Modal>
       </div>
