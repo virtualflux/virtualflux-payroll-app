@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import ChangePasswordModal from '../ChangePasswordModal';
+import withAuth from '@/app/hoc';
 
 const Container = ({ children, title = "Overview" }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -50,4 +51,4 @@ const Container = ({ children, title = "Overview" }) => {
   );
 };
 
-export default Container;
+export default withAuth(Container);
