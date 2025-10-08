@@ -200,7 +200,7 @@
 'use client'
 
 import React, { useState } from 'react';
-import { FaSync } from 'react-icons/fa'; // only need refresh icon now
+import { FaSync } from 'react-icons/fa';  
 import Container from '@/components/ui/Container';
 import Button from '@/components/ui/Button';
 import { Tabs, Tab } from '@/components/ui/Tabs';
@@ -217,7 +217,7 @@ const ManageStaff = () => {
   // 🔄 Refresh handler
   const handleRefresh = () => {
     console.log("Refreshing staff data...");
-    // Add API call or data reload logic here if needed
+     
   };
 
   return (

@@ -1,9 +1,10 @@
-'use client'
-import React from 'react';
-import { AiOutlineClose } from 'react-icons/ai';
-import { useRouter } from 'next/navigation';
-import SettingsSidebar from '@/components/ui/SettingsSidebar';
-import Button from '@/components/ui/Button';
+"use client";
+import React from "react";
+import { AiOutlineClose } from "react-icons/ai";
+import { useRouter } from "next/navigation";
+import SettingsSidebar from "@/components/ui/SettingsSidebar";
+import Button from "@/components/ui/Button";
+import Image from "next/image";
 
 const IntegrationSettingsPage = () => {
   const router = useRouter();
@@ -26,24 +27,31 @@ const IntegrationSettingsPage = () => {
 
         {/* Integration Section */}
         <div className="bg-white rounded-lg p-8">
-          <h2 className="text-2xl text-black font-semibold mb-8">Integration</h2>
-          
+          <h2 className="text-2xl text-black font-semibold mb-8">
+            Integration
+          </h2>
+
           <div className="border border-gray-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
                   <div className="w-16 h-16 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
-  <img 
-    src="/images/zohoigimg.png" 
-    alt="Zoho Integration" 
-    className="w-15 h-15 object-contain" 
-  />
-</div>
-
+                    <Image
+                      src="/images/zohoigimg.png"
+                      alt="Zoho Integration"
+                      className="w-15 h-15 object-contain"
+                      width={50}
+                      height={50}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-black">Zoho Integration</h3>
-                  <p className="text-sm text-gray-600">Sync your Zoho books or Zoho books data</p>
+                  <h3 className="text-lg font-semibold text-black">
+                    Zoho Integration
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Sync your Zoho books or Zoho books data
+                  </p>
                   <span className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
                     Connected
                   </span>
