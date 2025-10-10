@@ -6,11 +6,11 @@ export default function Home() {
   const router = useRouter()
   
   useEffect(() => {
-    // Check if user is logged in (you can implement this logic)
-    const isLoggedIn = localStorage.getItem('user') // or however you track auth
+   
+    const isLoggedIn = localStorage.getItem('user')  
     
     if (isLoggedIn) {
-      router.push('/overview') // or whatever your main dashboard route is
+      router.push('/overview') 
     } else {
       router.push('/login')
     }

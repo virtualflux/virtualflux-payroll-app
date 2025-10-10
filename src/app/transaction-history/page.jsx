@@ -12,6 +12,10 @@ import Container from '@/components/ui/Container';
 const TransactionHistoryPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('All');
+  const [sortBy, setSortBy] = useState('');
+  const [showFilter, setShowFilter] = useState(false);
+  const [showSort, setShowSort] = useState(false);
 
   // Sample data  
   const transactionData = [
@@ -62,16 +66,38 @@ const TransactionHistoryPage = () => {
     }
   ];
 
-  // ✅ Filter transactions based on search term
+  // ✅ Filter + Sort + Search
   const filteredData = useMemo(() => {
-    if (!searchTerm) return transactionData;
-    return transactionData.filter((item) =>
-      Object.values(item)
-        .join(' ')
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm, transactionData]);
+    let data = [...transactionData];
+
+    // search filter
+    if (searchTerm) {
+      data = data.filter((item) =>
+        Object.values(item)
+          .join(' ')
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // type filter
+    if (filterType !== 'All') {
+      data = data.filter((item) => item.type === filterType);
+    }
+
+    // sorting
+    if (sortBy === 'Amount') {
+      data.sort((a, b) => {
+        const amountA = parseInt(a.amount.replace(/[₦, ]/g, ''), 10);
+        const amountB = parseInt(b.amount.replace(/[₦, ]/g, ''), 10);
+        return amountB - amountA; // highest first
+      });
+    } else if (sortBy === 'Date') {
+      data.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    return data;
+  }, [searchTerm, filterType, sortBy, transactionData]);
 
   const columns = [
     { title: 'S/N', accessor: 'sn', render: (value, row, index) => index + 1 },
@@ -132,52 +158,72 @@ const TransactionHistoryPage = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card 
-            title="Total Transactions" 
-            icon={FiDollarSign}
-            number="142"
-          />
-          <Card 
-            title="Total Income" 
-            icon={FiTrendingUp}
-            number="₦ 30,000,000"
-          />
-          <Card 
-            title="Total Expenses" 
-            icon={FiTrendingDown}
-            number="₦ 10,000,000"
-          />
-          <Card 
-            title="Wallet Balance" 
-            icon={FiCreditCard}
-            number="₦ 20,000,000"
-          />
+          <Card title="Total Transactions" icon={FiDollarSign} number="142" />
+          <Card title="Total Income" icon={FiTrendingUp} number="₦ 30,000,000" />
+          <Card title="Total Expenses" icon={FiTrendingDown} number="₦ 10,000,000" />
+          <Card title="Wallet Balance" icon={FiCreditCard} number="₦ 20,000,000" />
         </div>
 
-        {/* Search and Filters (aligned right) */}
-        <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-6 text-black">
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-6 text-black relative">
           <SearchInput 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <div className="flex gap-3">
-            <Button className="bg-black text-white border border-gray-300 hover:bg-gray-600 flex items-center gap-2">
-              Filter
-              <FiChevronDown size={16} />
-            </Button>
-            <Button className="bg-black text-white border border-gray-300 hover:bg-gray-600 flex items-center gap-2">
-              Sort by
-              <FiChevronDown size={16} />
-            </Button>
+          <div className="flex gap-3 relative">
+            {/* Filter Dropdown */}
+            <div className="relative">
+              <Button 
+                className="bg-black text-white border border-gray-300 hover:bg-gray-600 flex items-center gap-2"
+                onClick={() => setShowFilter(!showFilter)}
+              >
+                Filter
+                <FiChevronDown size={16} />
+              </Button>
+              {showFilter && (
+                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  {['All', 'Income', 'Expense'].map((type) => (
+                    <div
+                      key={type}
+                      onClick={() => { setFilterType(type); setShowFilter(false); }}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    >
+                      {type}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <Button 
+                className="bg-black text-white border border-gray-300 hover:bg-gray-600 flex items-center gap-2"
+                onClick={() => setShowSort(!showSort)}
+              >
+                Sort by
+                <FiChevronDown size={16} />
+              </Button>
+              {showSort && (
+                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  {['Date', 'Amount'].map((sort) => (
+                    <div
+                      key={sort}
+                      onClick={() => { setSortBy(sort); setShowSort(false); }}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    >
+                      {sort}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Transaction Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <Table 
-            data={filteredData}
-            columns={columns}
-          />
+          <Table data={filteredData} columns={columns} />
         </div>
 
         {/* Pagination */}

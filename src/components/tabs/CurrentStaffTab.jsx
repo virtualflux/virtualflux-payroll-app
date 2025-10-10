@@ -177,7 +177,7 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
           ? {
               ...employee,
               ...editFormData,
-              // Remove commas and ensure salary is properly formatted
+               
               salary: editFormData.salary.replace(/,/g, ""),
             }
           : employee

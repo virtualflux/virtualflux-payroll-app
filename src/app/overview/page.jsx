@@ -145,7 +145,7 @@ const Overview = () => {
 
   const handleMonthChange = (e) => {
     setSelectedMonth(e.target.value);
-    console.log("Selected month:", e.target.value); // you can filter chartData based on this
+    console.log("Selected month:", e.target.value);  
   };
 
   return (

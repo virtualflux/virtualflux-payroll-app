@@ -9,7 +9,7 @@ import Select from "@/components/ui/Select";
 import Container from '@/components/ui/Container';
 
 const AnalyticsDashboard = () => {
-  // Sample data matching your design
+  // Sample data  
   const departmentData = [
     {
       department: 'Operations',
