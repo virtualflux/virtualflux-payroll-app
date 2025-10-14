@@ -389,12 +389,6 @@ const SignupForm = () => {
           password: formData.adminPassword,
         });
 
-        console.log(121, response);
-
-        setFormData((prev) => ({
-          ...prev,
-          email: response.data?.data?.data?.companyId,
-        }));
         setCurrentStep(3);
       } catch (error) {
         console.error("Company admin error:", error);
@@ -406,8 +400,23 @@ const SignupForm = () => {
         setIsLoading(false);
       }
     } else if (currentStep === 3 && validateStep3()) {
-      setCurrentStep(4);
-      console.log("Verification code:", formData.verificationCode.join(""));
+      setIsLoading(true);
+      try {
+        const response = await axiosClient.post("/payroll/auth/verify-otp", {
+          email: formData.adminEmail,
+          otp: formData.verificationCode.join("")
+        });
+
+        setCurrentStep(4);
+      } catch (error) {
+        console.error("Verify email error:", error);
+        setErrors({
+          general:
+            error.response?.data?.message || "Failed to verify email",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     } else if (currentStep === 4 && validateStep4()) {
       setCurrentStep(5);
       console.log("2FA setup completed");
@@ -498,6 +507,12 @@ const SignupForm = () => {
             </div>
           </div>
         </div>
+
+        {errors.general && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-700 text-sm">{errors.general}</p>
+          </div>
+        )}
 
         {currentStep === 1 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
