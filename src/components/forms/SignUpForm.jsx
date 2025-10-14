@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaBuilding,
@@ -29,7 +29,7 @@ import Select from "@/components/ui/Select";
 import Image from "next/image";
 import axiosClient from "../axiosClient";
 import { useDispatch } from "react-redux";
-import { createCompanySuccess } from "@/state/slices/user.slice";
+import { createAdminSuccess, createCompanySuccess } from "@/state/slices/user.slice";
 
 const SignupForm = () => {
   const router = useRouter();
@@ -55,6 +55,7 @@ const SignupForm = () => {
   const [isResending, setIsResending] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showManualSetup, setShowManualSetup] = useState(false);
+  const [qrCode, setQrCode] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("JBSWY3DPEIPL2OVO");
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const [step4Phase, setStep4Phase] = useState("scan");
@@ -347,6 +348,7 @@ const SignupForm = () => {
   };
 
   const handleContinue = async () => {
+    setErrors({});
     if (currentStep === 1 && validateStep1()) {
       setIsLoading(true);
       try {
@@ -389,6 +391,20 @@ const SignupForm = () => {
           password: formData.adminPassword,
         });
 
+        console.log("create admin", response)
+
+        dispatch(
+          createAdminSuccess({
+            accessToken: response.data.data.accessToken,
+            refreshToken: response.data.data.refreshToken,
+            data: {
+              user: response.data.data.data.user,
+              companyId: response.data.data.data.companyId,
+              hasCompany: response.data.data.data.hasCompany,
+            },
+          })
+        );
+
         setCurrentStep(3);
       } catch (error) {
         console.error("Company admin error:", error);
@@ -404,25 +420,58 @@ const SignupForm = () => {
       try {
         const response = await axiosClient.post("/payroll/auth/verify-otp", {
           email: formData.adminEmail,
-          otp: formData.verificationCode.join("")
+          otp: formData.verificationCode.join(""),
         });
 
         setCurrentStep(4);
       } catch (error) {
         console.error("Verify email error:", error);
         setErrors({
-          general:
-            error.response?.data?.message || "Failed to verify email",
+          general: error.response?.data?.message || "Failed to verify email",
         });
       } finally {
         setIsLoading(false);
       }
     } else if (currentStep === 4 && validateStep4()) {
-      setCurrentStep(5);
-      console.log("2FA setup completed");
+      setIsLoading(true);
+      try {
+        console.log(22);
+        const response = await axiosClient.post(
+          "/payroll/auth/2fa/authenticate",
+          {
+            token: twoFactorCode,
+          }
+        );
+        console.log(762, response);
+        // setCurrentStep(5);
+      } catch (error) {
+        console.error("2FA error:", error);
+        setErrors({
+          general: error.response?.data?.message || "Failed to 2FA",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     } else if (currentStep === 5) {
       setCurrentStep(6);
       console.log("Zoho sync:", zohoIntegrationEnabled ? "enabled" : "skipped");
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep === 4 && step4Phase === "scan") {
+      generate2FA();
+    }
+  }, [currentStep, step4Phase]);
+
+  const generate2FA = async () => {
+    try {
+      const response = await axiosClient.post("/payroll/auth/2fa");
+      console.log(464, response);
+      setTwoFactorCode(response.data.secret);
+      setQrCode(response.data.qrcode);
+    } catch (error) {
+      console.error("Error generating 2FA secret:", error);
     }
   };
 
@@ -935,6 +984,16 @@ const SignupForm = () => {
                       </div>
                     </div>
 
+                    <Button
+                      onClick={handleContinue}
+                      disabled={!validateStep4()}
+                      className={`px-12 py-3 text-lg font-medium ${
+                        validateStep4() ? "bg-black" : "bg-gray-400"
+                      }`}
+                    >
+                      {isLoading ? "Verifying Email..." : "Verify Email"}
+                    </Button>
+
                     <div className="mb-6">
                       <span className="text-gray-600 text-sm">
                         Don't have a QR scanner?{" "}
@@ -969,7 +1028,7 @@ const SignupForm = () => {
                             type="text"
                             value={twoFactorCode}
                             readOnly
-                            className="text-center font-mono bg-white"
+                            className="text-center font-mono bg-white "
                           />
                         </div>
                         <button

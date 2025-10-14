@@ -60,6 +60,18 @@ const userSlice = createSlice({
             state.accessToken = payload.accessToken
             state.error = null
         },
+        createAdminSuccess: (state, action) => {
+            const payload = action.payload
+
+            state.accessToken = payload.accessToken
+            state.refreshToken = payload.refreshToken
+            state.twoFaAuthenticated = payload.twoFaAuthenticated || false
+            state.user = payload.data.user
+            state.companyId = payload.data.companyId
+            state.hasCompany = payload.data.hasCompany
+            state.status = 'succeeded'
+            state.error = null
+        },
         logout: (state) => {
             state.accessToken = null
             state.refreshToken = null
@@ -90,5 +102,5 @@ const userSlice = createSlice({
     },
 })
 
-export const { loginSuccess, createCompanySuccess, logout } = userSlice.actions
+export const { loginSuccess, createCompanySuccess, createAdminSuccess, logout } = userSlice.actions
 export default userSlice.reducer
