@@ -53,6 +53,7 @@ const SignupForm = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showManualSetup, setShowManualSetup] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("JBSWY3DPEIPL2OVO");
   const [isCodeCopied, setIsCodeCopied] = useState(false);
@@ -347,6 +348,7 @@ const SignupForm = () => {
 
   const handleContinue = async () => {
     if (currentStep === 1 && validateStep1()) {
+      setIsLoading(true);
       try {
         const response = await axiosClient.post(
           "/payroll/auth/create-company",
@@ -363,14 +365,10 @@ const SignupForm = () => {
 
         dispatch(
           createCompanySuccess({
-            accessToken: response.data.data.accessToken
+            accessToken: response.data.data.accessToken,
           })
         );
 
-        setFormData((prev) => ({
-          ...prev,
-          companyId: response.data?.data?.data?.companyId,
-        }));
         setCurrentStep(2);
       } catch (error) {
         console.error("Company registration error:", error);
@@ -378,8 +376,11 @@ const SignupForm = () => {
           general:
             error.response?.data?.message || "Failed to register company info",
         });
+      } finally {
+        setIsLoading(false);
       }
     } else if (currentStep === 2 && validateStep2()) {
+      setIsLoading(true);
       try {
         const response = await axiosClient.post("/payroll/auth/create-admin", {
           firstName: formData.adminFirstName,
@@ -401,6 +402,8 @@ const SignupForm = () => {
           general:
             error.response?.data?.message || "Failed to register company admin",
         });
+      } finally {
+        setIsLoading(false);
       }
     } else if (currentStep === 3 && validateStep3()) {
       setCurrentStep(4);
@@ -698,12 +701,11 @@ const SignupForm = () => {
                 onClick={handleContinue}
                 className="px-12 py-3 text-lg font-medium"
               >
-                Continue
+                {isLoading ? "Loading..." : "Continue"}
               </Button>
             </div>
           </div>
         )}
-        {/* <<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */}
 
         {currentStep === 2 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -805,7 +807,7 @@ const SignupForm = () => {
                 onClick={handleContinue}
                 className="px-12 py-3 text-lg font-medium"
               >
-                Continue
+                {isLoading ? "Loading..." : "Continue"}
               </Button>
             </div>
           </div>
@@ -873,7 +875,7 @@ const SignupForm = () => {
                   validateStep3() ? "bg-black" : "bg-gray-400"
                 }`}
               >
-                Verify Email
+                {isLoading ? "Verifying Email..." : "Verify Email"}
               </Button>
             </div>
           </div>
@@ -1061,7 +1063,7 @@ const SignupForm = () => {
                     onClick={handleContinue}
                     className="px-12 py-3 text-lg font-medium"
                   >
-                    Sync with zoho
+                    {isLoading ? "Syncing..." : "Sync with zoho"}
                   </Button>
                 </>
               )}
@@ -1245,7 +1247,7 @@ const SignupForm = () => {
                       }`}
                       disabled={!validateZohoCredentials()}
                     >
-                      Sync with zoho
+                      {isLoading ? "Syncing..." : "Sync with zoho"}
                     </Button>
                   </div>
                 </>
