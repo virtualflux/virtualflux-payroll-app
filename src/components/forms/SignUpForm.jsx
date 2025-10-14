@@ -28,9 +28,12 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Image from "next/image";
 import axiosClient from "../axiosClient";
+import { useDispatch } from "react-redux";
+import { createCompanySuccess } from "@/state/slices/user.slice";
 
 const SignupForm = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     companyName: "",
@@ -345,17 +348,24 @@ const SignupForm = () => {
   const handleContinue = async () => {
     if (currentStep === 1 && validateStep1()) {
       try {
-        const response = await axiosClient.post("/payroll/auth/create-company", {
-          name: formData.companyName,
-          industry: formData.industry,
-          size: formData.companySize,
-          country: formData.country,
-          state: formData.state,
-          lga: formData.localGovernment,
-          address: formData.companyAddress,
-        });
+        const response = await axiosClient.post(
+          "/payroll/auth/create-company",
+          {
+            name: formData.companyName,
+            industry: formData.industry,
+            size: formData.companySize,
+            country: formData.country,
+            state: formData.state,
+            lga: formData.localGovernment,
+            address: formData.companyAddress,
+          }
+        );
 
-        console.log(222, response)
+        dispatch(
+          createCompanySuccess({
+            accessToken: response.data.data.accessToken
+          })
+        );
 
         setFormData((prev) => ({
           ...prev,
@@ -370,7 +380,28 @@ const SignupForm = () => {
         });
       }
     } else if (currentStep === 2 && validateStep2()) {
-      setCurrentStep(3);
+      try {
+        const response = await axiosClient.post("/payroll/auth/create-admin", {
+          firstName: formData.adminFirstName,
+          lastName: formData.adminLastName,
+          email: formData.adminEmail,
+          password: formData.adminPassword,
+        });
+
+        console.log(121, response);
+
+        setFormData((prev) => ({
+          ...prev,
+          email: response.data?.data?.data?.companyId,
+        }));
+        setCurrentStep(3);
+      } catch (error) {
+        console.error("Company admin error:", error);
+        setErrors({
+          general:
+            error.response?.data?.message || "Failed to register company admin",
+        });
+      }
     } else if (currentStep === 3 && validateStep3()) {
       setCurrentStep(4);
       console.log("Verification code:", formData.verificationCode.join(""));

@@ -54,6 +54,12 @@ const userSlice = createSlice({
             state.status = 'succeeded'
             state.error = null
         },
+        createCompanySuccess: (state, action) => {
+            const payload = action.payload
+
+            state.accessToken = payload.accessToken
+            state.error = null
+        },
         logout: (state) => {
             state.accessToken = null
             state.refreshToken = null
@@ -84,5 +90,5 @@ const userSlice = createSlice({
     },
 })
 
-export const { loginSuccess, logout } = userSlice.actions
+export const { loginSuccess, createCompanySuccess, logout } = userSlice.actions
 export default userSlice.reducer
