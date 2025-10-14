@@ -27,6 +27,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Image from "next/image";
+import axiosClient from "../axiosClient";
 
 const SignupForm = () => {
   const router = useRouter();
@@ -341,9 +342,33 @@ const SignupForm = () => {
     return step4Phase === "success";
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (currentStep === 1 && validateStep1()) {
-      setCurrentStep(2);
+      try {
+        const response = await axiosClient.post("/payroll/auth/create-company", {
+          name: formData.companyName,
+          industry: formData.industry,
+          size: formData.companySize,
+          country: formData.country,
+          state: formData.state,
+          lga: formData.localGovernment,
+          address: formData.companyAddress,
+        });
+
+        console.log(222, response)
+
+        setFormData((prev) => ({
+          ...prev,
+          companyId: response.data?.data?.data?.companyId,
+        }));
+        setCurrentStep(2);
+      } catch (error) {
+        console.error("Company registration error:", error);
+        setErrors({
+          general:
+            error.response?.data?.message || "Failed to register company info",
+        });
+      }
     } else if (currentStep === 2 && validateStep2()) {
       setCurrentStep(3);
     } else if (currentStep === 3 && validateStep3()) {
@@ -647,6 +672,7 @@ const SignupForm = () => {
             </div>
           </div>
         )}
+        {/* <<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */}
 
         {currentStep === 2 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -1030,12 +1056,12 @@ const SignupForm = () => {
                     <div className="flex items-start gap-4 mb-6">
                       <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Image
-                    src="/images/zohoigimg.png"
-                    alt="Zoho Integration"
-                    className="w-15 h-15 object-contain"
-                    width={50}
-                    height={50}
-                  />
+                          src="/images/zohoigimg.png"
+                          alt="Zoho Integration"
+                          className="w-15 h-15 object-contain"
+                          width={50}
+                          height={50}
+                        />
                       </div>
 
                       <div>
