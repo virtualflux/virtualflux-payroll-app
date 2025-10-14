@@ -29,7 +29,10 @@ import Select from "@/components/ui/Select";
 import Image from "next/image";
 import axiosClient from "../axiosClient";
 import { useDispatch } from "react-redux";
-import { createAdminSuccess, createCompanySuccess } from "@/state/slices/user.slice";
+import {
+  createAdminSuccess,
+  createCompanySuccess,
+} from "@/state/slices/user.slice";
 
 const SignupForm = () => {
   const router = useRouter();
@@ -56,7 +59,7 @@ const SignupForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showManualSetup, setShowManualSetup] = useState(false);
   const [qrCode, setQrCode] = useState("");
-  const [twoFactorCode, setTwoFactorCode] = useState("JBSWY3DPEIPL2OVO");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const [step4Phase, setStep4Phase] = useState("scan");
   const [twoFactorVerificationCode, setTwoFactorVerificationCode] = useState([
@@ -391,8 +394,6 @@ const SignupForm = () => {
           password: formData.adminPassword,
         });
 
-        console.log("create admin", response)
-
         dispatch(
           createAdminSuccess({
             accessToken: response.data.data.accessToken,
@@ -468,8 +469,8 @@ const SignupForm = () => {
     try {
       const response = await axiosClient.post("/payroll/auth/2fa");
       console.log(464, response);
-      setTwoFactorCode(response.data.secret);
-      setQrCode(response.data.qrcode);
+      setTwoFactorCode(response.data.data.secret);
+      setQrCode(response.data.data.qrcode);
     } catch (error) {
       console.error("Error generating 2FA secret:", error);
     }
@@ -959,40 +960,20 @@ const SignupForm = () => {
                     </p>
 
                     <div className="inline-block mb-6">
-                      <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
-                        <div className="w-40 h-40 bg-black relative">
-                          <div className="absolute inset-2 bg-white"></div>
-                          <div className="absolute top-2 left-2 w-8 h-8 bg-black"></div>
-                          <div className="absolute top-2 right-2 w-8 h-8 bg-black"></div>
-                          <div className="absolute bottom-2 left-2 w-8 h-8 bg-black"></div>
-                          <div className="absolute top-4 left-4 w-4 h-4 bg-white"></div>
-                          <div className="absolute top-4 right-4 w-4 h-4 bg-white"></div>
-                          <div className="absolute bottom-4 left-4 w-4 h-4 bg-white"></div>
-                          <div className="absolute top-12 left-8 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-16 left-6 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-20 left-12 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-14 right-8 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-18 right-6 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-22 right-10 w-2 h-2 bg-black"></div>
-                          <div className="absolute bottom-12 left-10 w-2 h-2 bg-black"></div>
-                          <div className="absolute bottom-16 left-14 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-28 left-16 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-24 left-20 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-32 right-12 w-2 h-2 bg-black"></div>
-                          <div className="absolute bottom-20 right-16 w-2 h-2 bg-black"></div>
-                        </div>
+                      <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        {qrCode ? (
+                          <img
+                            src={qrCode}
+                            alt="2FA QR Code"
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <div className="text-gray-400 text-sm">
+                            Generating QR...
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    <Button
-                      onClick={handleContinue}
-                      disabled={!validateStep4()}
-                      className={`px-12 py-3 text-lg font-medium ${
-                        validateStep4() ? "bg-black" : "bg-gray-400"
-                      }`}
-                    >
-                      {isLoading ? "Verifying Email..." : "Verify Email"}
-                    </Button>
 
                     <div className="mb-6">
                       <span className="text-gray-600 text-sm">
