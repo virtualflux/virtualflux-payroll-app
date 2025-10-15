@@ -436,15 +436,13 @@ const SignupForm = () => {
     } else if (currentStep === 4 && validateStep4()) {
       setIsLoading(true);
       try {
-        console.log(22);
         const response = await axiosClient.post(
           "/payroll/auth/2fa/authenticate",
           {
             token: twoFactorCode,
           }
         );
-        console.log(762, response);
-        // setCurrentStep(5);
+        setCurrentStep(5);
       } catch (error) {
         console.error("2FA error:", error);
         setErrors({
@@ -454,8 +452,19 @@ const SignupForm = () => {
         setIsLoading(false);
       }
     } else if (currentStep === 5) {
-      setCurrentStep(6);
-      console.log("Zoho sync:", zohoIntegrationEnabled ? "enabled" : "skipped");
+      setIsLoading(true);
+      try {
+        const response = await axiosClient.get("/payroll/auth/zoho-sync");
+        /* console.log("Zoho sync:", zohoIntegrationEnabled ? "enabled" : "skipped"); */
+        setCurrentStep(6);
+      } catch (error) {
+        console.error("Zoho sync error:", error);
+        setErrors({
+          general: error.response?.data?.message || "Failed to Zoho sync",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -468,7 +477,6 @@ const SignupForm = () => {
   const generate2FA = async () => {
     try {
       const response = await axiosClient.post("/payroll/auth/2fa");
-      console.log(464, response);
       setTwoFactorCode(response.data.data.secret);
       setQrCode(response.data.data.qrcode);
     } catch (error) {
