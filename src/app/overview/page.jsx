@@ -46,6 +46,8 @@ const Overview = () => {
     fetchOverview();
   }, []);
 
+  console.log(overviewData)
+
   if (isLoading) return <div>Loading...</div>;
   if (errors.fetch) return <div>{errors.fetch}</div>;
 
@@ -61,7 +63,7 @@ const Overview = () => {
           <Card title="Pending Salaries" icon={FaClock} number={formatCurrency(overviewData?.summary?.pendingSalaries || 0)} />
         </div>
 
-        <div className="w-full flex justify-end">
+        {/* <div className="w-full flex justify-end">
           <div className="w-48">
             <input
               type="month"
@@ -70,7 +72,7 @@ const Overview = () => {
               className="w-full border border-gray-300 rounded-lg p-2 text-black focus:outline-none focus:ring-2 focus:ring-black"
             />
           </div>
-        </div>
+        </div> */}
 
         <div className="w-full">
           <div className="bg-white border border-gray-300 rounded-lg p-6">
