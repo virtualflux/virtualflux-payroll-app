@@ -85,7 +85,7 @@ const LoginForm = () => {
           twoFaAuthenticated: response.data.twoFaAuthenticated,
           data: {
             user: response.data.user,
-            companyId: hasCompany && response.data.user.companyId,
+            companyId: hasCompany && response.data.companyId,
             hasCompany: response.data.data.hasCompany,
           },
         })
