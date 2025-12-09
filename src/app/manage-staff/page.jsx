@@ -13,14 +13,16 @@ import { formatCurrency } from '@/utils/formatCurrency';
 const ManageStaff = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [overviewData, setOverviewData] = useState([]);
+  const [pageInfo, setPageInfo] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [errors, setErrors] = useState('');
 
-  const fetchOverview = async () => {
+  const fetchOverview = async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await axiosClient.get('/payroll/staff');
-      console.log(response.data.data?.results)
+      const response = await axiosClient.get(`/payroll/staff?page=${page}&limit=10`);
+      console.log(response.data.data?.pageInfo)
+      setPageInfo(response.data.data?.pageInfo)
       setOverviewData(response.data.data?.results);
     } catch (error) {
       console.error(error);
@@ -31,10 +33,10 @@ const ManageStaff = () => {
   };
 
   useEffect(() => {
-    fetchOverview();
-  }, []);
+    fetchOverview(currentPage);
+  }, [currentPage]);
 
-  const totalPages = 10;
+  const totalPages = pageInfo?.pages;
 
   const handlePageChange = (page) => setCurrentPage(page);
 
