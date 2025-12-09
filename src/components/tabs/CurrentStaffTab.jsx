@@ -11,7 +11,7 @@ import Textarea from "@/components/ui/Textarea";
 import Card from "@/components/ui/Card";
 import { FaExclamationTriangle, FaCheck } from "react-icons/fa";
 
-const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange, staffData }) => {
+const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange, staffData, isLoading }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const [showTerminationModal, setShowTerminationModal] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -295,6 +295,8 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange, staffData 
     paymentMethod: staff.user?.paymentMethod || "",
     image: staff.user?.image || "/images/user.jpg",
   })) || [];
+
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-4">
