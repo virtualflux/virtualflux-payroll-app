@@ -10,6 +10,7 @@ import Select from "@/components/ui/Select";
 import Container from '@/components/ui/Container';
 import axiosClient from '@/components/axiosClient';
 import { formatCurrency } from '@/utils/formatCurrency';
+import toast from 'react-hot-toast';
 
 const AnalyticsDashboard = () => {
   const [overviewData, setOverviewData] = useState({});
@@ -22,8 +23,7 @@ const AnalyticsDashboard = () => {
       const response = await axiosClient.get('/payroll/dashboard');
       setOverviewData(response.data.data);
     } catch (error) {
-      console.error(error);
-      setErrors('Failed to load analytics data');
+      toast.error(error?.message || "Failed to load analytics data");
     } finally {
       setIsLoading(false);
     }

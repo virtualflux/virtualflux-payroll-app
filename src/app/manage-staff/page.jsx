@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { Tabs, Tab } from '@/components/ui/Tabs';
 import CurrentStaffTab from '@/components/tabs/CurrentStaffTab';
 import axiosClient from '@/components/axiosClient';
+import toast from 'react-hot-toast';
 
 const ManageStaff = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,8 +25,7 @@ const ManageStaff = () => {
       setPageInfo(response.data.data?.pageInfo);
       setOverviewData(response.data.data?.results);
     } catch (error) {
-      console.error(error);
-      setErrors('Failed to load staff data');
+      toast.error(error?.message || "Failed to fetch staff data");
     } finally {
       setIsLoading(false);
     }
@@ -43,11 +43,12 @@ const ManageStaff = () => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await axiosClient.get(`/payroll/refetch-employees`);
+      await axiosClient.get(`/payroll/staff/refetch-employees`);
       await fetchOverview(currentPage);
+
+      toast.success("Staff data refreshed");
     } catch (error) {
-      console.error(error);
-      setErrors('Failed to refresh staff data');
+      toast.error(error?.message || "Failed to refresh staff data");
     } finally {
       setIsRefreshing(false);
     }

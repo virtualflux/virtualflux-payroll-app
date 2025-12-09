@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card';
 import Container from '@/components/ui/Container';
 import axiosClient from '@/components/axiosClient';
 import { formatCurrency } from '@/utils/formatCurrency';
+import toast from 'react-hot-toast';
 
 const Overview = () => {
   const [overviewData, setOverviewData] = useState({});
@@ -35,8 +36,7 @@ const Overview = () => {
       const response = await axiosClient.get('/payroll/dashboard');
       setOverviewData(response.data.data);
     } catch (error) {
-      console.error(error);
-      setErrors({ fetch: 'Failed to load dashboard data' });
+      toast.error(error?.message || "Failed to load dashboard data");
     } finally {
       setIsLoading(false);
     }
