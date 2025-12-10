@@ -11,6 +11,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import axiosClient from "../axiosClient";
 import { loginSuccess } from "@/state/slices/user.slice";
+import toast from 'react-hot-toast';
 
 const LoginForm = () => {
   const router = useRouter();
@@ -64,7 +65,7 @@ const LoginForm = () => {
       const { user, hasCompany } = response.data.data;
 
       if (!response?.success) {
-        setErrors({ general: response?.message || "Invalid credentials" });
+        toast(response?.message || "Invalid credentials");
         return;
       }
 
@@ -98,7 +99,7 @@ const LoginForm = () => {
         error.message ||
         "Login failed. Please try again.";
 
-      setErrors({ general: errorMessage });
+      toast(errorMessage);
     } finally {
       setIsLoading(false);
     }
