@@ -6,6 +6,8 @@ import Input from './ui/Input'
 import Button from './ui/Button'
 import Modal from './ui/Modal'
 import { FaEye, FaEyeSlash, FaTimes, FaCheck } from 'react-icons/fa'
+import axiosClient from '@/components/axiosClient';
+import toast from 'react-hot-toast';
 
 const ChangePasswordModal = ({ open, setOpen }) => {
   const [formData, setFormData] = useState({
@@ -71,6 +73,10 @@ const ChangePasswordModal = ({ open, setOpen }) => {
       newErrors.confirmPassword = 'Passwords do not match'
     }
     
+    if(formData.currentPassword === formData.newPassword) {
+      newErrors.newPassword = 'New password is same as current password'
+    }
+    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -83,10 +89,10 @@ const ChangePasswordModal = ({ open, setOpen }) => {
     setIsLoading(true)
     
     try {
-      // TODO: Replace with your actual API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      console.log('Password changed successfully', formData)
+      const response = await axiosClient.post('/payroll/auth/change-password', {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
       
       setFormData({
         currentPassword: '',

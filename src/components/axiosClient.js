@@ -20,7 +20,7 @@ axiosClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const { data } = await axios.post("/api/auth/refresh");
+        const { data } = await axios.post("/payroll/auth/refresh-token");
         store.dispatch(loginSuccess(data));
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return axiosClient(originalRequest);
