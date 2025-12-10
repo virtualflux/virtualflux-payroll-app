@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSync, FaWallet, FaUsers, FaCalendar, FaChevronDown, FaTimes, FaCheck } from 'react-icons/fa';
 import Container from '@/components/ui/Container';
 import Button from '@/components/ui/Button';
@@ -9,6 +9,9 @@ import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import Pagination from '@/components/ui/Pagination';
 import Modal from '@/components/ui/Modal';
+import axiosClient from '@/components/axiosClient';
+import { formatCurrency } from '@/utils/formatCurrency';
+import toast from 'react-hot-toast';
 
 const Payment = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +24,8 @@ const Payment = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [totalPaidAmount, setTotalPaidAmount] = useState(0);
+  const [overviewData, setOverviewData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   
   // New state for year and month selection
   const [selectedYear, setSelectedYear] = useState('');
@@ -128,6 +133,22 @@ const Payment = () => {
     }
   ]);
 
+  const fetchOverview = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosClient.get('/payroll/dashboard');
+      setOverviewData(response.data.data);
+    } catch (error) {
+      toast.error(error?.message || "Failed to load dashboard data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOverview();
+  }, []);
+
   const totalPages = 10;
   const itemsPerPage = 10;
 
@@ -168,11 +189,6 @@ const Payment = () => {
   };
 
   const isPayButtonEnabled = selectedEmployees.length > 0;
-
-  // Format currency
-  const formatCurrency = (amount) => {
-    return `₦${amount.toLocaleString()}`;
-  };
 
   // Table columns configuration
   const columns = [
