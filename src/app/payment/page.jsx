@@ -65,8 +65,7 @@ const Payment = () => {
   const itemsPerPage = 10;
 
   // Calculate metrics
-  const totalPayment = totalPaidAmount;
-  console.log(overviewData)
+  const totalPayment = overviewData.reduce((sum, emp) => sum + emp.netSalary, 0);
   const totalStaff = overviewData.length;
   const paidStaff = overviewData.filter(emp => emp.paymentStatus === 'Paid').length;
   const unpaidStaff = totalStaff - paidStaff;
