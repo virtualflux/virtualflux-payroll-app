@@ -243,9 +243,27 @@ const SignupForm = () => {
     setStep4Phase("verify");
   };
 
-  const handleVerifyTwoFactor = () => {
+  const handleVerifyTwoFactor = async () => {
+  if (!validate2FAVerification()) return;
+
+  setIsLoading(true);
+  setErrors({});
+  try {
+    const code = twoFactorVerificationCode.join("").trim();
+    const response = await axiosClient.post("/payroll/auth/2fa/authenticate", { token: code });
+
     setStep4Phase("success");
-  };
+    setCurrentStep(5);
+  } catch (error) {
+    console.error("2FA error:", error);
+    setErrors({
+      general: error.response?.data?.message || "Invalid 2FA code",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleGoBackToScan = () => {
     setStep4Phase("scan");
@@ -348,7 +366,7 @@ const SignupForm = () => {
   };
 
   const validateStep4 = () => {
-    return step4Phase === "success";
+    return validate2FAVerification();
   };
 
   const handleContinue = async () => {
@@ -480,6 +498,7 @@ const SignupForm = () => {
   const generate2FA = async () => {
     try {
       const response = await axiosClient.post("/payroll/auth/2fa");
+      console.log(5, response.data)
       setTwoFactorCode(response.data.data.secret);
       setQrCode(response.data.data.qrcode);
     } catch (error) {
