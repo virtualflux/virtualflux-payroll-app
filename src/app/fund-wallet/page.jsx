@@ -27,6 +27,7 @@ const FundWallet = () => {
   const [destination, setDestination] = useState('')
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState([])
+  const [virtualAccount, setVirtualAccount] = useState({})
   const [walletBalance, setWalletBalance] = useState(null)
   const [totals, setTotals] = useState(null)
 
@@ -61,7 +62,9 @@ const FundWallet = () => {
     setIsLoading(true);
     try {
       const walletResponse = await axiosClient.get('/payroll/wallet');
+      const virtualAccountResponse = await axiosClient.get('/payroll/wallet/get-wallet-details');
       const transactionResponse = await axiosClient.get(`/payroll/payroll/transaction-history?page=1&limit=5`);
+      setVirtualAccount(virtualAccountResponse.data.data)
       setTransactions(transactionResponse?.data?.data.results)
       setTotals(transactionResponse?.data?.data?.totals)
       setWalletBalance(formatCurrency(walletResponse?.data?.data?.balance))
@@ -288,9 +291,21 @@ const FundWallet = () => {
               <h3 className="text-2xl font-bold text-gray-900">
                 {walletBalance}
               </h3>
+
+            <div className='my-2'>
+              <p className="text-sm text-gray-500 mb-2">
+                <b>Bank Name:</b> {virtualAccount.bankName}
+              </p>
+              <p className="text-sm text-gray-500 mb-2">
+                <b>Account Number:</b> {virtualAccount.accountNumber}
+              </p>
+              <p className="text-sm text-gray-500 mb-2">
+                <b>Account Name:</b> {virtualAccount.accountName}
+              </p>
+            </div>
             </div>
 
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Enter amount
               </label>
@@ -312,7 +327,7 @@ const FundWallet = () => {
               disabled={!depositAmount || parseFloat(depositAmount) <= 0}
             >
               Continue
-            </Button>
+            </Button> */}
           </div>
         </Modal>
 

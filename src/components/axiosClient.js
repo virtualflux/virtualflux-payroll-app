@@ -20,9 +20,13 @@ axiosClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const { data } = await axiosClient.post("/payroll/auth/refresh-token");
-        store.dispatch(loginSuccess(data));
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        const state = store.getState();
+        const token = state.user.refreshToken;
+        const { data } = await axiosClient.post("/payroll/auth/refresh-token", {
+          refreshToken: token
+        });
+        store.dispatch(loginSuccess(data.data));
+        originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
         return axiosClient(originalRequest);
       } catch (err) {
         store.dispatch(logout());
