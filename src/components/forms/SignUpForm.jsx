@@ -33,6 +33,7 @@ import {
   createAdminSuccess,
   createCompanySuccess,
 } from "@/state/slices/user.slice";
+import { store } from "@/state/store";
 
 const SignupForm = () => {
   const router = useRouter();
@@ -439,9 +440,10 @@ const SignupForm = () => {
         const response = await axiosClient.post(
           "/payroll/auth/2fa/authenticate",
           {
-            token: twoFactorCode,
+            token: twoFactorVerificationCode.join(""),
           }
         );
+
         setCurrentStep(5);
       } catch (error) {
         console.error("2FA error:", error);
@@ -456,6 +458,7 @@ const SignupForm = () => {
       try {
         const response = await axiosClient.get("/payroll/auth/zoho-sync");
         /* console.log("Zoho sync:", zohoIntegrationEnabled ? "enabled" : "skipped"); */
+        console.log("Zoho sync: ", response.data)
         setCurrentStep(6);
       } catch (error) {
         console.error("Zoho sync error:", error);
@@ -490,6 +493,12 @@ const SignupForm = () => {
     } else {
       router.push("/login");
     }
+  };
+
+  const handleZohoSync = () => {
+    const state = store.getState();
+    const token = state.user.accessToken;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/payroll/auth/zoho-sync?token=${token}`;
   };
 
   const getStepStatus = (stepNumber) => {
@@ -1123,7 +1132,7 @@ const SignupForm = () => {
                   </div>
 
                   <Button
-                    onClick={handleContinue}
+                    onClick={handleZohoSync}
                     className="px-12 py-3 text-lg font-medium"
                   >
                     {isLoading ? "Syncing..." : "Sync with zoho"}
