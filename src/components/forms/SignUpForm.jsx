@@ -1151,10 +1151,10 @@ const SignupForm = () => {
                   </div>
 
                   <Button
-                    onClick={handleZohoSync}
+                    onClick={() => setCurrentStep(5)}
                     className="px-12 py-3 text-lg font-medium"
                   >
-                    {isLoading ? "Syncing..." : "Sync with zoho"}
+                    Sync with zoho
                   </Button>
                 </>
               )}
@@ -1174,175 +1174,95 @@ const SignupForm = () => {
                 </p>
               </div>
 
-              {!showZohoForm ? (
-                <>
-                  <div className="border-2 border-gray-200 rounded-lg p-6 mb-6">
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Image
-                          src="/images/zohoigimg.png"
-                          alt="Zoho Integration"
-                          className="w-15 h-15 object-contain"
-                          width={50}
-                          height={50}
-                        />
-                      </div>
-
-                      <div>
-                        <h3 className="text-lg font-semibold text-black mb-1">
-                          Zoho Integration
-                        </h3>
-                        <p className="text-gray-600 text-sm">
-                          Sync your Zoho people or Zoho books date
-                        </p>
-                      </div>
+              <>
+                <div className="border-2 border-gray-200 rounded-lg p-6 mb-6">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Image
+                        src="/images/zohoigimg.png"
+                        alt="Zoho Integration"
+                        className="w-15 h-15 object-contain"
+                        width={50}
+                        height={50}
+                      />
                     </div>
 
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center gap-3">
-                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">
-                          Import employee data automatically
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">
-                          Sync company structure and departments
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">
-                          Keep employee records updated
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">
-                          Streamline payroll processes
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                      <span className="text-sm font-medium text-black">
-                        Enable Zoho Integration
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setZohoIntegrationEnabled(!zohoIntegrationEnabled);
-                          if (!zohoIntegrationEnabled) {
-                            handleEnableZohoSync();
-                          }
-                        }}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          zohoIntegrationEnabled ? "bg-black" : "bg-gray-300"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            zohoIntegrationEnabled
-                              ? "translate-x-6"
-                              : "translate-x-1"
-                          }`}
-                        />
-                      </button>
+                    <div>
+                      <h3 className="text-lg font-semibold text-black mb-1">
+                        Zoho Integration
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        Sync your Zoho people or Zoho books date
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex justify-center">
-                    <Button
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-3">
+                      <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
+                        Import employee data automatically
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
+                        Sync company structure and departments
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
+                        Keep employee records updated
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
+                        Streamline payroll processes
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <span className="text-sm font-medium text-black">
+                      Enable Zoho Integration
+                    </span>
+                    <button
+                      type="button"
                       onClick={() => {
-                        if (zohoIntegrationEnabled) {
-                          setShowZohoForm(true);
+                        setZohoIntegrationEnabled(!zohoIntegrationEnabled);
+                        if (!zohoIntegrationEnabled) {
+                          handleEnableZohoSync();
                         }
                       }}
-                      className={`px-12 py-3 text-lg font-medium ${
-                        zohoIntegrationEnabled ? "bg-black" : "bg-gray-400"
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        zohoIntegrationEnabled ? "bg-black" : "bg-gray-300"
                       }`}
-                      disabled={!zohoIntegrationEnabled}
                     >
-                      Sync with zoho
-                    </Button>
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          zohoIntegrationEnabled
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
                   </div>
-                </>
-              ) : (
-                <>
-                  {/* Zoho Credentials Form */}
-                  <div className="space-y-6 mb-8">
-                    {/* Zoho Domain */}
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Zoho Domain
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaGlobe className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <Input
-                          type="text"
-                          value={zohoCredentials.domain}
-                          onChange={handleZohoCredentialsChange("domain")}
-                          placeholder="Yourcompany.zoho.com"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
+                </div>
 
-                    {/* Zoho ID */}
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Zoho ID
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaIdCard className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <Input
-                          type="text"
-                          value={zohoCredentials.id}
-                          onChange={handleZohoCredentialsChange("id")}
-                          placeholder="Enter your zoho ID"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Zoho Secret */}
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Zoho Secret
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaLock className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <Input
-                          type="text"
-                          value={zohoCredentials.secret}
-                          onChange={handleZohoCredentialsChange("secret")}
-                          placeholder="Enter your zoho secret"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <Button
-                      onClick={handleContinue}
-                      className={`px-12 py-3 text-lg font-medium ${
-                        validateZohoCredentials() ? "bg-black" : "bg-gray-400"
-                      }`}
-                      disabled={!validateZohoCredentials()}
-                    >
-                      {isLoading ? "Syncing..." : "Sync with zoho"}
-                    </Button>
-                  </div>
-                </>
-              )}
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleZohoSync}
+                    className={`px-12 py-3 text-lg font-medium ${
+                      zohoIntegrationEnabled ? "bg-black" : "bg-gray-400"
+                    }`}
+                    disabled={!zohoIntegrationEnabled}
+                  >
+                    Sync with zoho
+                  </Button>
+                </div>
+              </>           
             </div>
           </div>
         )}
