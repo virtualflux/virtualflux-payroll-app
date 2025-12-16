@@ -13,6 +13,7 @@ const CompanySettingsPage = () => {
   const router = useRouter()
   const [companyData, setCompanyData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -35,7 +36,6 @@ const CompanySettingsPage = () => {
 
       setCompanyData({ company, admin });
 
-      // Populate form data
       setFormData({
         companyName: company.name || '',
         adminName: `${admin.firstName} ${admin.lastName}` || '',
@@ -65,6 +65,34 @@ const CompanySettingsPage = () => {
       [e.target.name]: e.target.value
     })
   }
+
+  const handleSave = async () => {
+  setIsSaving(true);
+  try {
+    const payload = {
+      adminName: formData.adminName,
+      phone: formData.phoneNumber,
+      email: formData.email,
+      name: formData.companyName,
+      industry: formData.industry,
+      size: formData.companySize,
+      country: formData.country,
+      state: formData.state,
+      lga: formData.localGovernment,
+      address: formData.companyAddress
+    }
+
+    const response = await axiosClient.put('/payroll/company', payload);
+    await fetchOverview()
+    toast.success('Company info updated successfully');
+  } catch (error) {
+    console.error(error);
+    toast.error(error?.message || 'Failed to update company info');
+  } finally {
+    setIsSaving(false);
+  }
+}
+
 
   return (
     <div className="flex min-h-screen bg-black">
@@ -211,7 +239,9 @@ const CompanySettingsPage = () => {
               <AiOutlineClose className="text-lg" />
               Cancel
             </button>
-            <Button>Save changes</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save changes'}
+            </Button>
           </div>
         </div>
       </div>
