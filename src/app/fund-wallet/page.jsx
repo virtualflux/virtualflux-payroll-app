@@ -63,7 +63,7 @@ const FundWallet = () => {
     try {
       const walletResponse = await axiosClient.get('/payroll/wallet');
       const virtualAccountResponse = await axiosClient.get('/payroll/wallet/get-wallet-details');
-      const transactionResponse = await axiosClient.get(`/payroll/payroll/transaction-history?page=1&limit=5`);
+      const transactionResponse = await axiosClient.get(`/payroll/wallet/transaction-history?page=1&limit=5`);
       setVirtualAccount(virtualAccountResponse.data.data)
       setTransactions(transactionResponse?.data?.data.results)
       setTotals(transactionResponse?.data?.data?.totals)
@@ -222,17 +222,19 @@ const FundWallet = () => {
             </div>
 
             <div className="w-full">
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <div className="text-center">
-                  <p className="text-base sm:text-lg font-bold text-gray-900">{formatCurrency((totals?.totalFunding || 0) / 100)}</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900">
+                    {formatCurrency(transactions.reduce((sum, tx) => sum + (tx.total || 0), 0) /100)}
+                  </p>
                   <p className="text-xs text-gray-500">Total Funding</p>
                 </div>
-                <div className="text-center">
+                {/* <div className="text-center">
                   <p className="text-base sm:text-lg font-bold text-gray-900">{formatCurrency((totals?.totalPayment || 0) / 100)}</p>
                   <p className="text-xs text-gray-500">Total Payment</p>
-                </div>
+                </div> */}
                 <div className="text-center">
-                  <p className="text-base sm:text-lg font-bold text-gray-900">{totals?.totalTransactions}</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900">{totals?.totalTransactions || transactions?.length}</p>
                   <p className="text-xs text-gray-500">Transactions</p>
                 </div>
               </div>
@@ -260,7 +262,7 @@ const FundWallet = () => {
                     <FiArrowDown size={16} className="text-blue-600 sm:w-4.5 sm:h-4.5" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 text-sm sm:text-base mb-1">{transaction.type === "credit" ? "Wallet Funding": "Payout"}</h3>
+                    <h3 className="font-medium text-gray-900 text-sm sm:text-base mb-1">{transaction.transactionType === "topup" ? "Wallet Funding": "Payout"}</h3>
                     <p className="text-xs sm:text-sm text-gray-500">{transaction.paymentGateway}</p>
                   </div>
                 </div>
