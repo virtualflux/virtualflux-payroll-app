@@ -42,8 +42,9 @@ const Payment = () => {
       const walletResponse = await axiosClient.get('/payroll/wallet');
       const staffResponse = await axiosClient.get(`/payroll/staff?page=${page}&limit=${pageSize}`);
       const transactionResponse = await axiosClient.get(`/payroll/payroll/transaction-history?page=1&limit=1`);
+      console.log(transactionResponse?.data?.data)
       const tx = transactionResponse?.data?.data?.results?.[0];
-      const formattedDate = formatDate(tx.createdAt);
+      const formattedDate = formatDate(tx?.createdAt);
       const pageInfo = staffResponse.data.data?.pageInfo || {};
 
       setCurrentPage(pageInfo.page || 1);

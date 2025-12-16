@@ -201,7 +201,7 @@ const TransactionHistoryPage = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <Table data={filteredData} columns={columns} isLoading={isLoading} />
+          <Table data={filteredData} columns={columns} isLoading={isLoading} emptyMessage="No transactions found" />
         </div>
 
         <Pagination

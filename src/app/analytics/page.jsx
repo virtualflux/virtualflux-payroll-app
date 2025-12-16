@@ -86,7 +86,7 @@ const AnalyticsDashboard = () => {
             <Card 
               title="Overtime Rate" 
               icon={Clock} 
-              number="4.8%" 
+              number={`${overviewData?.financialSummary?.overtimeRate?.toFixed(1) || 0}%`}
             />
             <Card 
               title="Average Salary" 
