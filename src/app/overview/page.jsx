@@ -46,8 +46,6 @@ const Overview = () => {
     fetchOverview();
   }, []);
 
-  console.log(overviewData)
-
   if (isLoading) return <div>Loading...</div>;
   if (errors.fetch) return <div>{errors.fetch}</div>;
 
