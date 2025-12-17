@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { FaUsers, FaWallet, FaCreditCard, FaClock } from 'react-icons/fa';
 import Card from '@/components/ui/Card';
 import Container from '@/components/ui/Container';
-import axiosClient from '@/components/axiosClient';
+import axiosClient from '@/components/axiosClient.js';
 import { formatCurrency } from '@/utils/formatCurrency';
 import toast from 'react-hot-toast';
 

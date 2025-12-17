@@ -25,12 +25,6 @@ const LoginForm = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Dummy credentials
-  const DUMMY_CREDENTIALS = {
-    email: "admin@virtualflux.com",
-    password: "admin123",
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -62,37 +56,44 @@ const LoginForm = () => {
 
     try {
       const { data: response } = await axiosClient.post("/payroll/auth/login", formData);
-      const { user, hasCompany } = response.data.data;
+      console.log(response.data)
 
-      if (!response?.success) {
-        toast(response?.message || "Invalid credentials");
+      if (response.data.twoFaRequired) {
+        router.push(`/login/2fa?tempToken=${response.data.tempToken}`);
         return;
       }
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          ...user,
-          accessToken: response.data.accessToken,
-          isLoggedIn: true,
-          loginDate: new Date().toISOString(),
-        })
-      );
+      // const { user, hasCompany } = response.data.data;
 
-      dispatch(
-        loginSuccess({
-          accessToken: response.data.accessToken,
-          refreshToken: response.data.refreshToken,
-          twoFaAuthenticated: response.data.twoFaAuthenticated,
-          data: {
-            user: response.data.user,
-            companyId: hasCompany && response.data.companyId,
-            hasCompany: response.data.data.hasCompany,
-          },
-        })
-      );
+      // if (!response?.success) {
+      //   toast(response?.message || "Invalid credentials");
+      //   return;
+      // }
 
-      router.push("/overview");
+      // localStorage.setItem(
+      //   "user",
+      //   JSON.stringify({
+      //     ...user,
+      //     accessToken: response.data.accessToken,
+      //     isLoggedIn: true,
+      //     loginDate: new Date().toISOString(),
+      //   })
+      // );
+
+      // dispatch(
+      //   loginSuccess({
+      //     accessToken: response.data.accessToken,
+      //     refreshToken: response.data.refreshToken,
+      //     twoFaAuthenticated: response.data.twoFaAuthenticated,
+      //     data: {
+      //       user: response.data.user,
+      //       companyId: hasCompany && response.data.companyId,
+      //       hasCompany: response.data.data.hasCompany,
+      //     },
+      //   })
+      // );
+
+      // router.push("/overview");
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
