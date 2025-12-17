@@ -1,6 +1,7 @@
 import axios from "axios";
 import { store } from "@/state/store";
 import { logout, loginSuccess } from "@/state/slices/user.slice";
+import { plainAxios } from "./plainAxios";
 
 let isRefreshing = false
 let failedQueue = []
