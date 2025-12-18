@@ -54,6 +54,9 @@ const userSlice = createSlice({
             state.status = 'succeeded'
             state.error = null
         },
+        updateAccessToken: (state, action) => {
+            state.accessToken = action.payload
+        },
         createCompanySuccess: (state, action) => {
             const payload = action.payload
 
@@ -102,5 +105,5 @@ const userSlice = createSlice({
     },
 })
 
-export const { loginSuccess, createCompanySuccess, createAdminSuccess, logout } = userSlice.actions
+export const { loginSuccess, updateAccessToken, createCompanySuccess, createAdminSuccess, logout } = userSlice.actions
 export default userSlice.reducer

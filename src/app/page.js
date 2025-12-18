@@ -1,20 +1,23 @@
 'use client'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSelector } from 'react-redux'
 
 export default function Home() {
   const router = useRouter()
+
+   const accessToken = useSelector(
+    (state) => state.user.accessToken
+  )
+  console.log(accessToken)
   
-  useEffect(() => {
-   
-    const isLoggedIn = localStorage.getItem('user')  
-    
-    if (isLoggedIn) {
-      router.push('/overview') 
+   useEffect(() => {
+    if (accessToken) {
+      router.replace('/overview')
     } else {
-      router.push('/login')
+      router.replace('/login')
     }
-  }, [router])
+  }, [accessToken, router])
   
   return (
     <div className="flex items-center justify-center min-h-screen">

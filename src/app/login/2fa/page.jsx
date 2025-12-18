@@ -65,18 +65,6 @@ const TwoFAForm = () => {
         return;
       }
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          ...response.data.data.user,
-          accessToken: response.data.accessToken,
-          refreshToken: response.data.refreshToken,
-          isLoggedIn: true,
-          twoFaAuthenticated: true,
-          loginDate: new Date().toISOString(),
-        })
-      );
-
       dispatch(
         loginSuccess({
           accessToken: response.data.accessToken,

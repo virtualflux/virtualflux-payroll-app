@@ -1,6 +1,6 @@
 import axios from "axios";
 import { store } from "@/state/store";
-import { logout, loginSuccess } from "@/state/slices/user.slice";
+import { logout, updateAccessToken } from "@/state/slices/user.slice";
 import { plainAxios } from "./plainAxios";
 
 let isRefreshing = false
@@ -24,7 +24,7 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use((config) => {
   const state = store.getState();
   const token = state.user.accessToken;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+ if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -65,9 +65,9 @@ axiosClient.interceptors.response.use(
       })
       console.log(data)
 
-      store.dispatch(loginSuccess(data.data))
-
       const newAccessToken = data.data.accessToken
+     store.dispatch(updateAccessToken(newAccessToken))
+
       processQueue(null, newAccessToken)
 
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`

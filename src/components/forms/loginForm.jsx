@@ -70,16 +70,6 @@ const LoginForm = () => {
       //   return;
       // }
 
-      // localStorage.setItem(
-      //   "user",
-      //   JSON.stringify({
-      //     ...user,
-      //     accessToken: response.data.accessToken,
-      //     isLoggedIn: true,
-      //     loginDate: new Date().toISOString(),
-      //   })
-      // );
-
       // dispatch(
       //   loginSuccess({
       //     accessToken: response.data.accessToken,

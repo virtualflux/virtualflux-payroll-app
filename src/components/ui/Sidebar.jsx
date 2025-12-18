@@ -87,16 +87,18 @@ import {
 import { useDispatch } from 'react-redux'
 import { logout } from '@/state/slices/user.slice';
 import { useRouter } from 'next/navigation'
+import { persistor } from '@/state/store';
 
 const Sidebar = ({ isOpen = true, onChangePasswordClick }) => {
   const dispatch = useDispatch();
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem("user")
-    dispatch(logout());
-    router.push('/login');
-  };
+    dispatch(logout())
+    persistor.purge?.()
+    router.push('/login')
+  }
+
 
   const menuItems = [
     { icon: AiOutlineWallet, label: "Analytics", href: "/analytics" },
