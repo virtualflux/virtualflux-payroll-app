@@ -75,19 +75,33 @@ const Overview = () => {
         <div className="w-full">
           <div className="bg-white border border-gray-300 rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-6">Monthly Payroll Expenses</h2>
-            <div className="w-full h-96">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyOverviewData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#000000' }} />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#000000' }}
-                    tickFormatter={formatYAxis}
-                  />
-                  <Bar dataKey="amount" fill="#000000" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="w-full h-96 flex items-center justify-center bg-white border border-gray-300 rounded-lg p-6">
+              {monthlyOverviewData?.length > 0 && monthlyOverviewData.some(item => item.amount > 0) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={monthlyOverviewData}
+                    margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
+                  >
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: '#000000' }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: '#000000' }}
+                      tickFormatter={formatYAxis}
+                    />
+                    <Bar dataKey="amount" fill="#000000" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-gray-500 text-center">
+                  <p className="text-lg">No overview data available for this month.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -120,14 +120,30 @@ const AnalyticsDashboard = () => {
 
             <div className="bg-white border border-gray-300 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-black mb-6">Monthly Payroll Expenses</h3>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#666' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#666' }} tickFormatter={formatYAxis} />
-                    <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={60} fill="#000000" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="h-80 flex items-center justify-center">
+                {monthlyChartData?.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 12, fill: '#666' }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 12, fill: '#666' }}
+                        tickFormatter={formatYAxis}
+                      />
+                      <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={60} fill="#000000" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-gray-500 text-center">
+                    <p className="text-lg">No payroll data available for this month.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
