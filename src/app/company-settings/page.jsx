@@ -49,7 +49,7 @@ const CompanySettingsPage = () => {
         phoneNumber: admin.phone || '',
       });
     } catch (error) {
-      toast.error(error?.message || "Failed to load company data");
+      toast.error(error.response?.data?.message || error.message  || "Failed to load company data");
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +87,7 @@ const CompanySettingsPage = () => {
     toast.success('Company info updated successfully');
   } catch (error) {
     console.error(error);
-    toast.error(error?.message || 'Failed to update company info');
+    toast.error(error.response?.data?.message || error.message  || 'Failed to update company info');
   } finally {
     setIsSaving(false);
   }

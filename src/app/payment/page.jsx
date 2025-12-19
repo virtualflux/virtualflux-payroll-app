@@ -25,6 +25,7 @@ const Payment = () => {
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [totalPaidAmount, setTotalPaidAmount] = useState(0);
   const [overviewData, setOverviewData] = useState([]);
+  const [payrollData, setPayrollData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -39,21 +40,32 @@ const Payment = () => {
   const fetchOverview = async (page = 1) => {
     setIsLoading(true);
     try {
-      const walletResponse = await axiosClient.get('/payroll/wallet');
-      const staffResponse = await axiosClient.get(`/payroll/staff?page=${page}&limit=${pageSize}`);
-      const transactionResponse = await axiosClient.get(`/payroll/payroll/transaction-history?page=1&limit=1`);
-      console.log(transactionResponse?.data?.data)
-      const tx = transactionResponse?.data?.data?.results?.[0];
-      const formattedDate = formatDate(tx?.createdAt);
-      const pageInfo = staffResponse.data.data?.pageInfo || {};
+      const [walletRes, staffRes, payrollRes, txRes] = await Promise.all([
+        axiosClient.get('/payroll/wallet'),
+        axiosClient.get(`/payroll/staff?page=${page}&limit=${pageSize}`),
+        axiosClient.get(`/payroll/payroll`),
+        axiosClient.get('/payroll/payroll/transaction-history?page=1&limit=1'),
+      ]);
 
+      const walletBalanceValue = walletRes?.data?.data?.balance || 0;
+      setWalletBalance(formatCurrency(walletBalanceValue));
+
+      const payrollDataMapped = (payrollRes?.data?.data?.data || []).map(
+        ({ id, companyUser }) => ({ id, companyUser })
+      );
+      setPayrollData(payrollDataMapped);
+
+      const staffData = staffRes?.data?.data?.results || [];
+      const pageInfo = staffRes?.data?.data?.meta || {};
+      setOverviewData(staffData);
       setCurrentPage(pageInfo.page || 1);
-      setTotalPages(pageInfo.pages || 1);
-      setLastTransactionDate(formattedDate)
-      setOverviewData(staffResponse?.data?.data?.results)
-      setWalletBalance(formatCurrency(walletResponse?.data?.data?.balance))
+      setTotalPages(pageInfo.totalPages || 1);
+
+      const lastTx = txRes?.data?.data?.results?.[0];
+      setLastTransactionDate(lastTx ? formatDate(lastTx.createdAt) : 'N/A');
     } catch (error) {
-      toast.error(error?.message || "Failed to load dashboard data");
+      console.error('Error fetching overview:', error);
+      toast.error(error?.response?.data?.message || 'Failed to load dashboard data');
     } finally {
       setIsLoading(false);
     }
@@ -63,6 +75,7 @@ const Payment = () => {
     fetchOverview(currentPage);
   }, [currentPage]);
 
+  console.log(payrollData)
   const itemsPerPage = 10;
 
   // Calculate metrics
@@ -111,7 +124,7 @@ const Payment = () => {
         className="w-4 h-4"
         onChange={(e) => {
           if (e.target.checked) {
-            setSelectedEmployees(overviewData.map(emp => emp.id));
+            setSelectedEmployees(payrollData.map(emp => emp.id));
           } else {
             setSelectedEmployees([]);
           }
@@ -131,28 +144,28 @@ const Payment = () => {
   { 
     title: 'Name', 
     accessor: 'name', 
-    render: (_, row) => `${row.user.firstName} ${row.user.lastName}` 
+    render: (_, row) => `${row.companyUser.user.firstName} ${row.companyUser.user.lastName}` 
   },
-  { title: 'Department', accessor: 'department', render: (_, row) => row.company.industry || 'N/A' },
-  { title: 'Basic Salary', accessor: 'basicSalary', render: (_, row) => formatCurrency(row.grossSalary) },
-  { title: 'Allowances', accessor: 'allowances', render: (_, row) => '0' },
-  { title: 'Deductions', accessor: 'deductions', render: (_, row) => formatCurrency(row.totalDeduction) },
-  { title: 'Net Salary', accessor: 'netSalary', render: (_, row) => formatCurrency(row.netSalary) },
+  { title: 'Department', accessor: 'department', render: (_, row) => row.companyUser.user.industry || 'N/A' },
+  { title: 'Gross Salary', accessor: 'grossSalary', render: (_, row) => formatCurrency(row.companyUser.grossSalary) },
+  // { title: 'Allowances', accessor: 'allowances', render: (_, row) => '0' },
+  { title: 'Deductions', accessor: 'deductions', render: (_, row) => formatCurrency(row.companyUser.totalDeduction) },
+  { title: 'Net Salary', accessor: 'netSalary', render: (_, row) => formatCurrency(row.companyUser.netSalary) },
   { 
     title: 'Status', 
     accessor: 'status',
     render: (_, row) => (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-        row.employeeStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+        row.companyUser.employeeStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
       }`}>
-        {row.employeeStatus}
+        {row.companyUser.employeeStatus}
       </span>
     )
   },
   {
     title: 'Role',
     accessor: 'role',
-    render: (_, row) => row.role
+    render: (_, row) => row.companyUser.role
   }
 ];
 
@@ -173,11 +186,11 @@ const Payment = () => {
     }
   };
 
-  const getSelectedEmployeesData = () => overviewData.filter(emp => selectedEmployees.includes(emp.id));
+  const getSelectedEmployeesData = () => payrollData.filter(emp => selectedEmployees.includes(emp.id));
 
   const calculateTotalAmount = () => {
     return getSelectedEmployeesData().reduce((sum, emp) => {
-      return sum + emp.netSalary;
+      return sum + emp.companyUser.netSalary;
     }, 0);
   };
 
@@ -185,26 +198,38 @@ const Payment = () => {
  const calculateTotals = () => {
   const selectedData = getSelectedEmployeesData();
   return {
-    basicSalary: selectedData.reduce((sum, emp) => sum + emp.grossSalary, 0),
+    grossSalary: selectedData.reduce((sum, emp) => sum + emp.companyUser.grossSalary, 0),
     totalAllowance: 0, // or map from salaryBreakDown if available
-    totalDeduction: selectedData.reduce((sum, emp) => sum + emp.totalDeduction, 0),
-    netSalary: selectedData.reduce((sum, emp) => sum + emp.netSalary, 0),
+    totalDeduction: selectedData.reduce((sum, emp) => sum + emp.companyUser.totalDeduction, 0),
+    netSalary: selectedData.reduce((sum, emp) => sum + emp.companyUser.netSalary, 0),
   };
 };
 
   // Handle continue from payment selection modal
-  const handleContinueToPaymentProcess = () => {
+  const handleContinueToPaymentProcess = async() => {
     if (!selectedYear || !selectedMonthDropdown) {
-      alert('Please select both year and month');
+      toast.error('Please select both year and month');
       return;
     }
     
     // Format the selected month for display
     const monthLabel = months.find(m => m.value === selectedMonthDropdown)?.label;
     setSelectedMonth(`${monthLabel} ${selectedYear}`);
+
+    try {
+      const response = await axiosClient.post('/payroll/payroll/pay', {
+        payrollIds: selectedEmployees
+      })
+
+      if(response.success) {
+        setShowPaymentSelectionModal(false);
+        setShowPaymentProcessModal(true);
+      }
+      console.log(response.data)
+    } catch (error) {
+      toast.error(error?.response.data.message || error.message || 'Failed to process payment')
+    }
     
-    setShowPaymentSelectionModal(false);
-    setShowPaymentProcessModal(true);
   };
 
   const handleProcessPayment = () => {
@@ -216,7 +241,7 @@ const Payment = () => {
     setTotalPaidAmount(prev => prev + amount);
 
     // Mark employees as Paid
-    const updatedData = overviewData.map(emp =>
+    const updatedData = payrollData.map(emp =>
       selectedEmployees.includes(emp.id) ? { ...emp, paymentStatus: 'Paid' } : emp
     );
     setOverviewData(updatedData);
@@ -245,9 +270,9 @@ const Payment = () => {
   };
 
   // Filter data based on search and filter
-const filteredData = overviewData
+const filteredData = payrollData
   .filter(emp => {
-    const fullName = `${emp.user.firstName} ${emp.user.lastName}`;
+    const fullName = `${emp.companyUser.user.firstName} ${emp.companyUser.user.lastName}`;
     const matchesSearch =
       fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (emp.company.name || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -464,8 +489,8 @@ const filteredData = overviewData
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Basic Salary:</span>
-                    <span className="font-medium text-black">{formatCurrency(calculateTotals().basicSalary)}</span>
+                    <span className="text-gray-600">Gross Salary:</span>
+                    <span className="font-medium text-black">{formatCurrency(calculateTotals().grossSalary)}</span>
                   </div>
                   
                   <div className="flex items-center justify-between">

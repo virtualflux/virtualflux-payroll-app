@@ -23,7 +23,7 @@ const AnalyticsDashboard = () => {
       const response = await axiosClient.get('/payroll/dashboard');
       setOverviewData(response.data.data);
     } catch (error) {
-      toast.error(error?.message || "Failed to load analytics data");
+      toast.error(error.response?.data?.message || error.message  || "Failed to load analytics data");
     } finally {
       setIsLoading(false);
     }

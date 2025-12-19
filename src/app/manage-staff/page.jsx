@@ -25,7 +25,7 @@ const ManageStaff = () => {
       setPageInfo(response.data.data?.pageInfo);
       setOverviewData(response.data.data?.results);
     } catch (error) {
-      toast.error(error?.message || "Failed to fetch staff data");
+      toast.error(error.response?.data?.message || error.message  || "Failed to fetch staff data");
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +48,7 @@ const ManageStaff = () => {
 
       toast.success("Staff data refreshed");
     } catch (error) {
-      toast.error(error?.message || "Failed to refresh staff data");
+      toast.error(error.response?.data?.message || error.message  || "Failed to refresh staff data");
     } finally {
       setIsRefreshing(false);
     }

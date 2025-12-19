@@ -56,7 +56,7 @@ const TransactionHistoryPage = () => {
       setCurrentPage(pageInfo.page || 1);
       setTotalPages(pageInfo.pages || 1);
     } catch (error) {
-      toast.error(error?.message || "Failed to load transactions");
+      toast.error(error.response?.data?.message || error.message  || "Failed to load transactions");
     } finally {
       setIsLoading(false);
     }

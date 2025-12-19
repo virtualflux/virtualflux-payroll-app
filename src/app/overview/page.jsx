@@ -36,7 +36,7 @@ const Overview = () => {
       const response = await axiosClient.get('/payroll/dashboard');
       setOverviewData(response.data.data);
     } catch (error) {
-      toast.error(error?.message || "Failed to load dashboard data");
+      toast.error(error.response?.data?.message || error.message  || "Failed to load dashboard data");
     } finally {
       setIsLoading(false);
     }

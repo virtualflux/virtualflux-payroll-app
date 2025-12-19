@@ -10,6 +10,7 @@ import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
 import Card from "@/components/ui/Card";
 import { FaExclamationTriangle, FaCheck } from "react-icons/fa";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange, staffData, isLoading }) => {
   const [expandedRows, setExpandedRows] = useState({});
@@ -285,12 +286,12 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange, staffData,
     department: staff.user?.department || "N/A",
     position: staff.user?.position || "N/A",
     employmentType: staff.role || "",
-    salary: staff.salaryBreakDown?.[0]?.amount || "0",
+    salary: formatCurrency(staff?.grossSalary) || "0",
     status: staff.employeeStatus || "Active",
     contactNo: staff.user?.contactNo || "",
     emailAddress: staff.user?.email || "",
     employmentDate: staff.user?.createdAt.split('T')[0] || "",
-    bankDetails: staff.user?.bankDetails || "",
+    bankDetails: staff?.bankDetails || {},
     benefit: staff.user?.benefit || "",
     paymentMethod: staff.user?.paymentMethod || "",
     image: staff.user?.image || "/images/user.jpg",
@@ -374,14 +375,14 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange, staffData,
                               <div>
                                 <p className="text-black mb-1">Salary</p>
                                 <p className="text-black font-medium">
-                                  ₦{row.salary}
+                                  {row.salary}
                                 </p>
                               </div>
-                              <div>
-                                <p className="text-black mb-1">Bank details</p>
-                                <p className="text-black font-medium">
-                                  {row.bankDetails}
-                                </p>
+                              <div className="space-y-1">
+                                <p className="text-black">Bank Details</p>
+                                <p className="text-[11px]">Bank: {row.bankDetails?.bankName}</p>
+                                <p className="text-[11px]">Account Name: {row.bankDetails?.accountName}</p>
+                                <p className="text-[11px]">Account Number: {row.bankDetails?.accountNumber}</p>
                               </div>
                             </div>
                             <div className="space-y-3">

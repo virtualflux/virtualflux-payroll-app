@@ -69,7 +69,7 @@ const FundWallet = () => {
       setTotals(transactionResponse?.data?.data?.totals)
       setWalletBalance(formatCurrency(walletResponse?.data?.data?.balance))
     } catch (error) {
-      toast.error(error?.message || "Failed to load dashboard data");
+      toast.error(error.response?.data?.message || error.message  || "Failed to load dashboard data");
     } finally {
       setIsLoading(false);
     }
