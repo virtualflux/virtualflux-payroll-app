@@ -34,11 +34,14 @@ import {
   createCompanySuccess,
 } from "@/state/slices/user.slice";
 import { store } from "@/state/store";
+import { locationData } from "@/utils/locationData";
 
 const SignupForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [currentStep, setCurrentStep] = useState(1);
+  const [states, setStates] = useState([]);
+  const [localGovernments, setLocalGovernments] = useState([]);
   const [formData, setFormData] = useState({
     companyName: "",
     industry: "",
@@ -109,33 +112,7 @@ const SignupForm = () => {
     "500+ employees",
   ];
 
-  const countries = ["Nigeria", "Ghana", "Kenya", "South Africa", "Egypt"];
-
-  const states = [
-    "Lagos",
-    "Abuja",
-    "Kano",
-    "Rivers",
-    "Oyo",
-    "Delta",
-    "Kaduna",
-    "Ogun",
-    "Cross River",
-    "Bayelsa",
-  ];
-
-  const localGovernments = [
-    "Ikeja 1",
-    "Ikeja 2",
-    "Victoria Island",
-    "Ikoyi",
-    "Surulere",
-    "Yaba",
-    "Mushin",
-    "Alimosho",
-    "Agege",
-    "Kosofe",
-  ];
+  const countries = ["Nigeria",/*  "Ghana", "Kenya", "South Africa", "Egypt" */];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -157,6 +134,19 @@ const SignupForm = () => {
       ...prev,
       [name]: value,
     }));
+
+    if (name === "country") {
+      setStates(Object.keys(locationData[value]?.states || {}));
+      setFormData((prev) => ({ ...prev, state: "", localGovernment: "" }));
+      setLocalGovernments([]);
+    }
+
+    if (name === "state") {
+      const countryStates = locationData[formData.country]?.states || {};
+      setLocalGovernments(countryStates[value] || []);
+      setFormData((prev) => ({ ...prev, localGovernment: "" }));
+    }
+
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -682,13 +672,10 @@ const SignupForm = () => {
                       name="country"
                       value={formData.country}
                       onChange={handleSelectChange("country")}
-                      placeholder="Enter country"
-                      className={errors.country ? "border-red-500" : ""}
+                      placeholder="Select country"
                     >
-                      {countries.map((country) => (
-                        <option key={country} value={country}>
-                          {country}
-                        </option>
+                      {Object.keys(locationData).map((country) => (
+                        <option key={country} value={country}>{country}</option>
                       ))}
                     </Select>
                     {errors.country && (
@@ -706,13 +693,11 @@ const SignupForm = () => {
                       name="state"
                       value={formData.state}
                       onChange={handleSelectChange("state")}
-                      placeholder="Enter state"
-                      className={errors.state ? "border-red-500" : ""}
+                      placeholder="Select state"
+                      disabled={!formData.country}
                     >
                       {states.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
+                        <option key={state} value={state}>{state}</option>
                       ))}
                     </Select>
                     {errors.state && (
@@ -732,13 +717,11 @@ const SignupForm = () => {
                       name="localGovernment"
                       value={formData.localGovernment}
                       onChange={handleSelectChange("localGovernment")}
-                      placeholder="Enter local government"
-                      className={errors.localGovernment ? "border-red-500" : ""}
+                      placeholder="Select local government"
+                      disabled={!formData.state}
                     >
                       {localGovernments.map((lg) => (
-                        <option key={lg} value={lg}>
-                          {lg}
-                        </option>
+                        <option key={lg} value={lg}>{lg}</option>
                       ))}
                     </Select>
                     {errors.localGovernment && (
