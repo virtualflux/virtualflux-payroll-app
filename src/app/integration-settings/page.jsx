@@ -5,9 +5,27 @@ import { useRouter } from "next/navigation";
 import SettingsSidebar from "@/components/ui/SettingsSidebar";
 import Button from "@/components/ui/Button";
 import Image from "next/image";
+import { store } from "@/state/store";
+import axiosClient from "@/components/axiosClient";
+import toast from 'react-hot-toast';
 
 const IntegrationSettingsPage = () => {
   const router = useRouter();
+
+  const handleZohoSync = async () => {
+    try {
+      const state = store.getState();
+      const token = state.user.accessToken;
+      window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/payroll/auth/zoho-sync?token=${token}`;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Sync failed. Please try again.";
+      
+      toast.error(errorMessage);
+    }
+  }
 
   return (
     <div className="flex min-h-screen bg-black">
@@ -57,8 +75,11 @@ const IntegrationSettingsPage = () => {
                   </span>
                 </div>
               </div>
-              <button className="bg-white text-black border border-gray-300 hover:bg-gray-100 p-2">
-                Configure
+              <button 
+                onClick={handleZohoSync} 
+                className="bg-white text-gray-500 border border-gray-500 hover:text-black hover:border-black hover:bg-gray-100 p-2 cursor-pointer rounded-md px-4"
+              >
+                Re-Configure
               </button>
             </div>
           </div>
