@@ -1,5 +1,6 @@
-"use client"
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Clock, DollarSign, Users, Download } from 'lucide-react';
 import Card from "@/components/ui/Card";
@@ -7,61 +8,51 @@ import Button from "@/components/ui/Button";
 import Table from "@/components/ui/Table";
 import Select from "@/components/ui/Select";
 import Container from '@/components/ui/Container';
+import axiosClient from '@/components/axiosClient';
+import { formatCurrency } from '@/utils/formatCurrency';
+import toast from 'react-hot-toast';
 
 const AnalyticsDashboard = () => {
-  // Sample data  
-  const departmentData = [
+  const [overviewData, setOverviewData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [errors, setErrors] = useState('');
+
+  const fetchOverview = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosClient.get('/payroll/dashboard');
+      setOverviewData(response.data.data);
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message  || "Failed to load analytics data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOverview();
+  }, []);
+
+  const monthlyChartData = useMemo(() => {
+    return overviewData?.monthlyPayrollExpenses || [];
+  }, [overviewData]);
+
+  const departmentData = useMemo(() => [
     {
       department: 'Operations',
       headCount: 300,
-      totalPayroll: '₦3,500,000',
-      averageSalary: '₦2,500,000',
-      benefitsBonus: '₦1,000,000'
+      totalPayroll: formatCurrency(3500000),
+      averageSalary: formatCurrency(2500000),
+      benefitsBonus: formatCurrency(1000000)
     },
     {
       department: 'Development',
       headCount: 150,
-      totalPayroll: '₦3,000,000',
-      averageSalary: '₦2,000,000',
-      benefitsBonus: '₦1,000,000'
+      totalPayroll: formatCurrency(3000000),
+      averageSalary: formatCurrency(2000000),
+      benefitsBonus: formatCurrency(1000000)
     },
-    {
-      department: 'Design',
-      headCount: 150,
-      totalPayroll: '₦2,500,000',
-      averageSalary: '₦1,500,000',
-      benefitsBonus: '₦1,000,000'
-    },
-    {
-      department: 'Marketing',
-      headCount: 200,
-      totalPayroll: '₦3,000,000',
-      averageSalary: '₦2,000,000',
-      benefitsBonus: '₦1,000,000'
-    },
-    {
-      department: 'Sales',
-      headCount: 150,
-      totalPayroll: '₦2,000,000',
-      averageSalary: '₦1,000,000',
-      benefitsBonus: '₦1,000,000'
-    },
-    {
-      department: 'Human Resources',
-      headCount: 50,
-      totalPayroll: '₦1,500,000',
-      averageSalary: '₦1,000,000',
-      benefitsBonus: '₦500,000'
-    }
-  ];
-
-  const chartData = [
-    { month: 'Jan', amount: 1200000 },
-    { month: 'Feb', amount: 1600000 },
-    { month: 'Mar', amount: 1000000 },
-    { month: 'Apr', amount: 1800000 },
-    { month: 'May', amount: 2200000 }
-  ];
+  ], [formatCurrency]);
 
   const columns = [
     { title: 'Department', accessor: 'department' },
@@ -71,170 +62,111 @@ const AnalyticsDashboard = () => {
     { title: 'Benefits/Bonus', accessor: 'benefitsBonus' }
   ];
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
+  const formatYAxis = useCallback((value) => {
+    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
+    return value;
+  }, []);
 
-  const CustomBar = (props) => {
-    const colors = ['#FFC107', '#2196F3', '#000000', '#4CAF50', '#F44336'];
-    const { index } = props;
-    return <Bar {...props} fill={colors[index % colors.length]} />;
-  };
+  if (isLoading) return <div>Loading analytics...</div>;
+  if (errors) return <div>{errors}</div>;
 
   return (
-    <Container> 
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Page Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black">Analytics</h1>
-        </div>
+    <Container>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-black mb-8">Analytics</h1>
 
-        {/* Top Metrics Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card 
-            title="Average Monthly Payroll" 
-            icon={DollarSign} 
-            number="₦15,500,000" 
-          />
-          <Card 
-            title="Overtime Rate" 
-            icon={Clock} 
-            number="4.8%" 
-          />
-          <Card 
-            title="Average Salary" 
-            icon={TrendingUp} 
-            number="₦10,000,000" 
-          />
-          <Card 
-            title="Total Staff" 
-            icon={Users} 
-            number="1000" 
-          />
-        </div>
-
-        <div className='flex items-center gap-4 mb-4'>
-             <Button className="flex items-center gap-2 text-sm">
-                  <Download size={16} />
-                  Export
-                </Button>
-                <Select className="w-40" defaultValue="last30days">
-                  <option value="last30days">Last 30 days</option>
-                  <option value="last60days">Last 60 days</option>
-                  <option value="last90days">Last 90 days</option>
-                </Select>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Payroll by Department Table */}
-          <div className="lg:col-span-2 bg-white border border-gray-300 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-black text-center">Payroll by Department</h2>
-              <div className="flex items-center gap-4">
-                {/* <Button className="flex items-center gap-2 text-sm">
-                  <Download size={16} />
-                  Export
-                </Button>
-                <Select className="w-40" defaultValue="last30days">
-                  <option value="last30days">Last 30 days</option>
-                  <option value="last60days">Last 60 days</option>
-                  <option value="last90days">Last 90 days</option>
-                </Select> */}
-              </div>
-            </div>
-            <Table 
-              data={departmentData} 
-              columns={columns}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card 
+              title="Average Monthly Payroll" 
+              icon={DollarSign} 
+              number={formatCurrency(overviewData?.financialSummary?.totalPayroll)} 
+            />
+            <Card 
+              title="Overtime Rate" 
+              icon={Clock} 
+              number={`${overviewData?.financialSummary?.overtimeRate?.toFixed(1) || 0}%`}
+            />
+            <Card 
+              title="Average Salary" 
+              icon={TrendingUp} 
+              number={formatCurrency(overviewData?.financialSummary?.averageSalary)} 
+            />
+            <Card 
+              title="Total Staff" 
+              icon={Users} 
+              number={overviewData?.summary?.totalStaff || 0} 
             />
           </div>
 
-          {/* Monthly Payroll Expenses Chart */}
-          <div className="bg-white border border-gray-300 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-black mb-6">Monthly Payroll Expenses</h3>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis 
-                    dataKey="month" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#666' }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#666' }}
-                    tickFormatter={(value) => `${value / 1000000}M`}
-                  />
-                  <Bar 
-                    dataKey="amount" 
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={60}
-                  >
-                    {chartData.map((entry, index) => {
-                      const colors = ['#FFC107', '#2196F3', '#000000', '#4CAF50', '#F44336'];
-                      return (
-                        <Bar 
-                          key={`bar-${index}`} 
-                          fill={colors[index % colors.length]} 
-                        />
-                      );
-                    })}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+          <div className='flex items-center gap-4 mb-4'>
+            <Button className="flex items-center gap-2 text-sm">
+              <Download size={16} />
+              Export
+            </Button>
+            <Select className="w-40" defaultValue="last30days">
+              <option value="last30days">Last 30 days</option>
+              <option value="last60days">Last 60 days</option>
+              <option value="last90days">Last 90 days</option>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white border border-gray-300 rounded-lg p-6">
+              <h2 className="text-xl font-semibold text-black mb-6 text-center">Payroll by Department</h2>
+              <Table data={departmentData} columns={columns} />
+            </div>
+
+            <div className="bg-white border border-gray-300 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-black mb-6">Monthly Payroll Expenses</h3>
+              <div className="h-80 flex items-center justify-center">
+                {monthlyChartData?.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 12, fill: '#666' }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 12, fill: '#666' }}
+                        tickFormatter={formatYAxis}
+                      />
+                      <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={60} fill="#000000" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-gray-500 text-center">
+                    <p className="text-lg">No payroll data available for this month.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Workforce Analytics */}
-        <div className="mt-8">
-          <div className="bg-white border border-gray-300 rounded-lg p-6">
+          <div className="mt-8 bg-white border border-gray-300 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-black mb-6">Workforce Analytics</h3>
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Employee</span>
-                <div className="flex items-center gap-8">
-                  <span className="text-xl font-semibold text-black">1,000</span>
-                  <span className="text-sm text-green-500 flex items-center">
-                    <TrendingUp size={16} className="mr-1" />
-                    8.4%
-                  </span>
-                </div>
+                <span className="text-sm text-gray-600">Total Employees</span>
+                <span className="text-xl font-semibold text-black">{overviewData?.workforceAnalytics?.totalEmployees || 0}</span>
               </div>
-              
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">New Hires</span>
-                <div className="flex items-center gap-8">
-                  <span className="text-xl font-semibold text-black">50</span>
-                  <span className="text-sm text-green-500 flex items-center">
-                    <TrendingUp size={16} className="mr-1" />
-                    60%
-                  </span>
-                </div>
+                <span className="text-xl font-semibold text-black">{overviewData?.workforceAnalytics?.newHires || 0}</span>
               </div>
-              
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Turnover</span>
-                <div className="flex items-center gap-8">
-                  <span className="text-xl font-semibold text-black">10</span>
-                  <span className="text-sm text-red-500 flex items-center">
-                    <TrendingUp size={16} className="mr-1 rotate-180" />
-                    70%
-                  </span>
-                </div>
+                <span className="text-xl font-semibold text-black">{overviewData?.workforceAnalytics?.turnover || 0}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </Container>
   );
 };

@@ -1,80 +1,82 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { HiOutlineSparkles } from 'react-icons/hi'
-import Input from '@/components/ui/Input'
-import Button from '@/components/ui/Button'
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { HiOutlineSparkles } from "react-icons/hi";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
 import loginbgimg from "@images/loginbgimg.png";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import axiosClient from "../axiosClient";
+import { loginSuccess } from "@/state/slices/user.slice";
+import toast from 'react-hot-toast';
 
 const LoginForm = () => {
-  const router = useRouter()
+  const router = useRouter();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [errors, setErrors] = useState({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-
-  // Dummy credentials
-  const DUMMY_CREDENTIALS = {
-    email: 'admin@virtualflux.com',
-    password: 'admin123'
-  }
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
+      [name]: value,
+    }));
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
-      }))
+        [name]: "",
+      }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors = {}
-    if (!formData.email.trim()) newErrors.email = 'Email is required'
-    if (!formData.password) newErrors.password = 'Password is required'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    const newErrors = {};
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.password) newErrors.password = "Password is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!validateForm()) return
-    setIsLoading(true)
+    e.preventDefault();
+    if (!validateForm()) return;
 
-    setTimeout(() => {
-      if (formData.email === DUMMY_CREDENTIALS.email && 
-          formData.password === DUMMY_CREDENTIALS.password) {
-        const userData = {
-          email: formData.email,
-          fullName: 'Admin User',
-          isLoggedIn: true,
-          loginDate: new Date().toISOString()
-        }
-        localStorage.setItem('user', JSON.stringify(userData))
-        setIsLoading(false)
-        router.push('/overview')
-      } else {
-        setIsLoading(false)
-        setErrors({
-          general: 'Invalid credentials. Try: admin@virtualflux.com / admin123'
-        })
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const { data: response } = await axiosClient.post("/payroll/auth/login", formData);
+      console.log(response.data)
+
+      if (response.data.twoFaRequired) {
+        router.push(`/login/2fa?tempToken=${response.data.tempToken}`);
+        return;
       }
-    }, 1000)
-  }
 
-  const handleSignupRedirect = () => router.push('/signup')
-  const handleForgotPassword = () => router.push('/reset-password')
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Login failed. Please try again.";
+
+      toast(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignupRedirect = () => router.push("/signup");
+  const handleForgotPassword = () => router.push("/reset-password");
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
@@ -82,8 +84,12 @@ const LoginForm = () => {
       <div className="w-full lg:w-1/2 bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-md">
           <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-3">Welcome Back</h1>
-            <p className="text-gray-600 text-sm sm:text-base">Please login below to continue</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-3">
+              Welcome Back
+            </h1>
+            <p className="text-gray-600 text-sm sm:text-base">
+              Please login below to continue
+            </p>
           </div>
 
           {errors.general && (
@@ -106,7 +112,11 @@ const LoginForm = () => {
                   placeholder="User ID"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`pl-10 h-12 bg-white rounded-sm border-thi ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-500'}`}
+                  className={`pl-10 h-12 bg-white rounded-sm border-thi ${
+                    errors.email
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-500"
+                  }`}
                 />
                 {errors.email && (
                   <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -124,7 +134,11 @@ const LoginForm = () => {
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`pl-10 pr-10 h-12 bg-white rounded-sm ${errors.password ? 'border-red-500 focus:border-red-500' : 'border-gray-500'}`}
+                  className={`pl-10 pr-10 h-12 bg-white rounded-sm ${
+                    errors.password
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-500"
+                  }`}
                 />
                 <button
                   type="button"
@@ -152,7 +166,10 @@ const LoginForm = () => {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
                     Remember me
                   </label>
                 </div>
@@ -177,13 +194,15 @@ const LoginForm = () => {
                     Signing In...
                   </div>
                 ) : (
-                  'Sign in'
+                  "Sign in"
                 )}
               </Button>
 
               {/* Signup Link */}
               <div className="text-center pt-4">
-                <span className="text-gray-600 text-sm">Don't have an account? </span>
+                <span className="text-gray-600 text-sm">
+                  Don't have an account?{" "}
+                </span>
                 <button
                   type="button"
                   onClick={handleSignupRedirect}
@@ -200,15 +219,15 @@ const LoginForm = () => {
       {/* Right Side - Virtual Flux Branding */}
       <div className="w-full lg:w-1/2 bg-gray-900 relative overflow-hidden flex items-center justify-center min-h-[50vh] lg:min-h-screen">
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(${loginbgimg.src})`
+            backgroundImage: `url(${loginbgimg.src})`,
           }}
         >
           <div className="absolute inset-0 bg-black/10"></div>
         </div>
-        
+
         {/* Content */}
         <div className="relative z-10 text-center px-4 sm:px-8 lg:px-12">
           {/* Virtual Flux Logo/Brand */}
@@ -240,7 +259,7 @@ const LoginForm = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoginForm
+export default LoginForm;

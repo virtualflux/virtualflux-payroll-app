@@ -10,8 +10,9 @@ import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
 import Card from "@/components/ui/Card";
 import { FaExclamationTriangle, FaCheck } from "react-icons/fa";
+import { formatCurrency } from "@/utils/formatCurrency";
 
-const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
+const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange, staffData, isLoading }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const [showTerminationModal, setShowTerminationModal] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -25,7 +26,7 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
   const [acknowledge, setAcknowledge] = useState(false);
 
   // Convert staffData to state so we can update it
-  const [staffData, setStaffData] = useState([
+  const [staffData2, setStaffData] = useState([
     {
       sn: 1,
       employeeId: "OP/VFLA/1705/099",
@@ -116,7 +117,7 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
       render: (value) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            value === "Active"
+            value === "active"
               ? "bg-green-100 text-green-700"
               : "bg-yellow-100 text-yellow-700"
           }`}
@@ -278,6 +279,26 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
     setTerminationDate("");
   };
 
+  const tableData = staffData?.map((staff, index) => ({
+    sn: index + 1,
+    employeeId: staff.user?.employeeId || `EMP-${index + 1}`,
+    name: `${staff.user?.firstName} ${staff.user?.lastName}`  || "",
+    department: staff.user?.department || "N/A",
+    position: staff.user?.position || "N/A",
+    employmentType: staff.role || "",
+    salary: formatCurrency(staff?.grossSalary) || "0",
+    status: staff.employeeStatus || "Active",
+    contactNo: staff.user?.contactNo || "",
+    emailAddress: staff.user?.email || "",
+    employmentDate: staff.user?.createdAt.split('T')[0] || "",
+    bankDetails: staff?.bankDetails || {},
+    benefit: staff.user?.benefit || "",
+    paymentMethod: staff.user?.paymentMethod || "",
+    image: staff.user?.image || "/images/user.jpg",
+  })) || [];
+
+  if (isLoading) return <div>Loading...</div>;
+
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-lg border border-gray-300">
@@ -293,7 +314,7 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
               </tr>
             </thead>
             <tbody>
-              {staffData.map((row, rowIndex) => (
+              {tableData.map((row, rowIndex) => (
                 <React.Fragment key={rowIndex}>
                   <tr className="text-xs text-black border-b border-gray-300 hover:bg-gray-50">
                     {columns.map((col, colIndex) => (
@@ -306,54 +327,17 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
                   </tr>
                   {expandedRows[rowIndex] && (
                     <tr>
-                      <td
-                        colSpan={columns.length}
-                        className="px-6 py-4 bg-gray-50 border-b border-gray-300"
-                      >
+                      <td colSpan={columns.length} className="px-6 py-4 bg-gray-50 border-b border-gray-300">
+                        {/* Expanded Row Details */}
                         <div className="flex items-start gap-6">
                           <div className="flex-shrink-0">
-                            <img
-                              src={row.image}
-                              alt={row.name}
-                              className="w-16 h-16 rounded-full object-cover border border-gray-300"
-                            />
+                            <img src={row.image} alt={row.name} className="w-16 h-16 rounded-full object-cover border border-gray-300" />
                           </div>
                           <div className="flex-1 grid grid-cols-6 gap-6 text-xs">
                             <div className="space-y-3">
-                              <div>
-                                <p className="text-black mb-1">Name</p>
-                                <p className="text-black font-medium">
-                                  {row.name}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-black mb-1">Employee ID</p>
-                                <p className="font-medium bg-black text-white px-2 py-1 rounded text-xs inline-block">
-                                  {row.employeeId}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-black mb-1">
-                                  Employment Status
-                                </p>
-                                <p className="text-black font-medium">
-                                  {row.status}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="space-y-3">
-                              <div>
-                                <p className="text-black mb-1">Department</p>
-                                <p className="text-black font-medium">
-                                  {row.department}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-black mb-1">Contact No.</p>
-                                <p className="text-black font-medium">
-                                  {row.contactNo}
-                                </p>
-                              </div>
+                              <div><p className="text-black mb-1">Name</p><p className="text-black font-medium">{row.name}</p></div>
+                              <div><p className="text-black mb-1">Employee ID</p><p className="font-medium bg-black text-white px-2 py-1 rounded text-xs inline-block">{row.employeeId}</p></div>
+                              <div><p className="text-black mb-1">Employment Status</p><p className="text-black font-medium">{row.status}</p></div>
                             </div>
                             <div className="space-y-3">
                               <div>
@@ -391,14 +375,14 @@ const CurrentStaffTab = ({ currentPage, totalPages, handlePageChange }) => {
                               <div>
                                 <p className="text-black mb-1">Salary</p>
                                 <p className="text-black font-medium">
-                                  ₦{row.salary}
+                                  {row.salary}
                                 </p>
                               </div>
-                              <div>
-                                <p className="text-black mb-1">Bank details</p>
-                                <p className="text-black font-medium">
-                                  {row.bankDetails}
-                                </p>
+                              <div className="space-y-1">
+                                <p className="text-black">Bank Details</p>
+                                <p className="text-[11px]">Bank: {row.bankDetails?.bankName}</p>
+                                <p className="text-[11px]">Account Name: {row.bankDetails?.accountName}</p>
+                                <p className="text-[11px]">Account Number: {row.bankDetails?.accountNumber}</p>
                               </div>
                             </div>
                             <div className="space-y-3">

@@ -1,12 +1,16 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import { FiPlus, FiArrowUp, FiSend, FiRotateCcw, FiArrowDown, FiX } from 'react-icons/fi'
 import Container from '@/components/ui/Container'
+import axiosClient from '@/components/axiosClient';
+import { formatCurrency } from '@/utils/formatCurrency';
+import { formatDate } from '@/utils/formatDate';
+import toast from 'react-hot-toast';
 
 const FundWallet = () => {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
@@ -21,7 +25,11 @@ const FundWallet = () => {
   const [withdrawPassword, setWithdrawPassword] = useState('')
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', ''])
   const [destination, setDestination] = useState('')
-  const currentBalance = 20000000
+  const [isLoading, setIsLoading] = useState(true);
+  const [transactions, setTransactions] = useState([])
+  const [virtualAccount, setVirtualAccount] = useState({})
+  const [walletBalance, setWalletBalance] = useState(null)
+  const [totals, setTotals] = useState(null)
 
   // Nigerian Banks
   const nigerianBanks = [
@@ -50,13 +58,26 @@ const FundWallet = () => {
     'Zenith Bank'
   ]
 
-  // dummy transactions
-  const transactions = [
-    { id: 1, type: 'Wallet funding', method: 'Bank transfer .... 8976', amount: '+5,000,000', date: 'Jun 12, 2023' },
-    { id: 2, type: 'Wallet funding', method: 'Card transfer .... 9765', amount: '+5000.00', date: 'Aug 12, 2023' },
-    { id: 3, type: 'Wallet funding', method: 'Bank transfer .... 8976', amount: '+7,000,000', date: 'May 12, 2024' },
-    { id: 4, type: 'Wallet funding', method: 'Card transfer .... 9765', amount: '+1,000,000', date: 'July 15, 2025' }
-  ]
+  const fetchOverview = async () => {
+    setIsLoading(true);
+    try {
+      const walletResponse = await axiosClient.get('/payroll/wallet');
+      const virtualAccountResponse = await axiosClient.get('/payroll/wallet/get-wallet-details');
+      const transactionResponse = await axiosClient.get(`/payroll/wallet/transaction-history?page=1&limit=5`);
+      setVirtualAccount(virtualAccountResponse.data.data)
+      setTransactions(transactionResponse?.data?.data.results)
+      setTotals(transactionResponse?.data?.data?.totals)
+      setWalletBalance(formatCurrency(walletResponse?.data?.data?.balance))
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message  || "Failed to load dashboard data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOverview();
+  }, []);
 
   const openDepositModal = () => {
     setIsDepositModalOpen(true)
@@ -156,14 +177,6 @@ const FundWallet = () => {
     }
   }
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0
-    }).format(amount)
-  }
-
   return (
     <Container>
       <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
@@ -179,7 +192,7 @@ const FundWallet = () => {
           <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200">
             <div className="mb-4 sm:mb-6">
               <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-10 text-start">Current Balance</p>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">₦20,000,000</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">{walletBalance}</h1>
             </div>
             
             {/* Action Buttons */}
@@ -205,21 +218,23 @@ const FundWallet = () => {
           <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 flex flex-col gap-6 sm:gap-15 items-start justify-start">
             <div className="w-full text-center">
               <p className="text-xs sm:text-sm text-gray-500 mb-1">Current Balance</p>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">₦20,000,000</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{walletBalance}</h1>
             </div>
 
             <div className="w-full">
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <div className="text-center">
-                  <p className="text-base sm:text-lg font-bold text-gray-900">₦ 10,000,000</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900">
+                    {formatCurrency(transactions.reduce((sum, tx) => sum + (tx.total || 0), 0) /100)}
+                  </p>
                   <p className="text-xs text-gray-500">Total Funding</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-base sm:text-lg font-bold text-gray-900">₦ 5,000,000</p>
+                {/* <div className="text-center">
+                  <p className="text-base sm:text-lg font-bold text-gray-900">{formatCurrency((totals?.totalPayment || 0) / 100)}</p>
                   <p className="text-xs text-gray-500">Total Payment</p>
-                </div>
+                </div> */}
                 <div className="text-center">
-                  <p className="text-base sm:text-lg font-bold text-gray-900">90</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900">{totals?.totalTransactions || transactions?.length}</p>
                   <p className="text-xs text-gray-500">Transactions</p>
                 </div>
               </div>
@@ -235,7 +250,7 @@ const FundWallet = () => {
                 <FiRotateCcw size={16} className="text-gray-500 sm:w-5 sm:h-5" />
                 <h2 className="text-base sm:text-lg font-medium text-gray-900">Recent transaction</h2>
               </div>
-              <button className="text-blue-600 hover:underline text-xs sm:text-sm">see all</button>
+              {/* <button className="text-blue-600 hover:underline text-xs sm:text-sm">see all</button> */}
             </div>
           </div>
 
@@ -247,13 +262,13 @@ const FundWallet = () => {
                     <FiArrowDown size={16} className="text-blue-600 sm:w-4.5 sm:h-4.5" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 text-sm sm:text-base mb-1">{transaction.type}</h3>
-                    <p className="text-xs sm:text-sm text-gray-500">{transaction.method}</p>
+                    <h3 className="font-medium text-gray-900 text-sm sm:text-base mb-1">{transaction.transactionType === "topup" ? "Wallet Funding": "Payout"}</h3>
+                    <p className="text-xs sm:text-sm text-gray-500">{transaction.paymentGateway}</p>
                   </div>
                 </div>
                 <div className="text-left sm:text-right mt-3 sm:mt-0 w-full sm:w-auto">
-                  <p className="font-medium text-blue-600 text-sm sm:text-base mb-1">{transaction.amount}</p>
-                  <p className="text-xs sm:text-sm text-gray-500">{transaction.date}</p>
+                  <p className="font-medium text-blue-600 text-sm sm:text-base mb-1">{formatCurrency((transaction.total || 0) / 100)}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">{formatDate(transaction.createdAt)}</p>
                 </div>
               </div>
             ))}
@@ -276,11 +291,23 @@ const FundWallet = () => {
             <div className="mb-6">
               <p className="text-sm text-gray-500 mb-2">Total balance</p>
               <h3 className="text-2xl font-bold text-gray-900">
-                {formatCurrency(currentBalance)}
+                {walletBalance}
               </h3>
+
+            <div className='my-2'>
+              <p className="text-sm text-gray-500 mb-2">
+                <b>Bank Name:</b> {virtualAccount.bankName}
+              </p>
+              <p className="text-sm text-gray-500 mb-2">
+                <b>Account Number:</b> {virtualAccount.accountNumber}
+              </p>
+              <p className="text-sm text-gray-500 mb-2">
+                <b>Account Name:</b> {virtualAccount.accountName}
+              </p>
+            </div>
             </div>
 
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Enter amount
               </label>
@@ -302,7 +329,7 @@ const FundWallet = () => {
               disabled={!depositAmount || parseFloat(depositAmount) <= 0}
             >
               Continue
-            </Button>
+            </Button> */}
           </div>
         </Modal>
 
@@ -336,7 +363,7 @@ const FundWallet = () => {
                     />
                   </div>
                   <p className="text-xs text-gray-400 mt-1">
-                    Available Balance: ₦{currentBalance.toLocaleString()}
+                    Available Balance: {walletBalance}
                   </p>
                 </div>
 

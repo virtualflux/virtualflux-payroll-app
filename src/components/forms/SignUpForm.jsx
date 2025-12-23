@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaBuilding,
@@ -27,10 +27,21 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Image from "next/image";
+import axiosClient from "../axiosClient";
+import { useDispatch } from "react-redux";
+import {
+  createAdminSuccess,
+  createCompanySuccess,
+} from "@/state/slices/user.slice";
+import { store } from "@/state/store";
+import { locationData } from "@/utils/locationData";
 
 const SignupForm = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [currentStep, setCurrentStep] = useState(1);
+  const [states, setStates] = useState([]);
+  const [localGovernments, setLocalGovernments] = useState([]);
   const [formData, setFormData] = useState({
     companyName: "",
     industry: "",
@@ -49,8 +60,10 @@ const SignupForm = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showManualSetup, setShowManualSetup] = useState(false);
-  const [twoFactorCode, setTwoFactorCode] = useState("JBSWY3DPEIPL2OVO");
+  const [qrCode, setQrCode] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const [step4Phase, setStep4Phase] = useState("scan");
   const [twoFactorVerificationCode, setTwoFactorVerificationCode] = useState([
@@ -99,33 +112,7 @@ const SignupForm = () => {
     "500+ employees",
   ];
 
-  const countries = ["Nigeria", "Ghana", "Kenya", "South Africa", "Egypt"];
-
-  const states = [
-    "Lagos",
-    "Abuja",
-    "Kano",
-    "Rivers",
-    "Oyo",
-    "Delta",
-    "Kaduna",
-    "Ogun",
-    "Cross River",
-    "Bayelsa",
-  ];
-
-  const localGovernments = [
-    "Ikeja 1",
-    "Ikeja 2",
-    "Victoria Island",
-    "Ikoyi",
-    "Surulere",
-    "Yaba",
-    "Mushin",
-    "Alimosho",
-    "Agege",
-    "Kosofe",
-  ];
+  const countries = ["Nigeria",/*  "Ghana", "Kenya", "South Africa", "Egypt" */];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -147,6 +134,19 @@ const SignupForm = () => {
       ...prev,
       [name]: value,
     }));
+
+    if (name === "country") {
+      setStates(Object.keys(locationData[value]?.states || {}));
+      setFormData((prev) => ({ ...prev, state: "", localGovernment: "" }));
+      setLocalGovernments([]);
+    }
+
+    if (name === "state") {
+      const countryStates = locationData[formData.country]?.states || {};
+      setLocalGovernments(countryStates[value] || []);
+      setFormData((prev) => ({ ...prev, localGovernment: "" }));
+    }
+
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -233,9 +233,27 @@ const SignupForm = () => {
     setStep4Phase("verify");
   };
 
-  const handleVerifyTwoFactor = () => {
+  const handleVerifyTwoFactor = async () => {
+  if (!validate2FAVerification()) return;
+
+  setIsLoading(true);
+  setErrors({});
+  try {
+    const code = twoFactorVerificationCode.join("").trim();
+    const response = await axiosClient.post("/payroll/auth/2fa/authenticate", { token: code });
+
     setStep4Phase("success");
-  };
+    setCurrentStep(5);
+  } catch (error) {
+    console.error("2FA error:", error);
+    setErrors({
+      general: error.response?.data?.message || "Invalid 2FA code",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleGoBackToScan = () => {
     setStep4Phase("scan");
@@ -338,23 +356,143 @@ const SignupForm = () => {
   };
 
   const validateStep4 = () => {
-    return step4Phase === "success";
+    return validate2FAVerification();
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    setErrors({});
     if (currentStep === 1 && validateStep1()) {
-      setCurrentStep(2);
+      setIsLoading(true);
+      try {
+        const response = await axiosClient.post(
+          "/payroll/auth/create-company",
+          {
+            name: formData.companyName,
+            industry: formData.industry,
+            size: formData.companySize,
+            country: formData.country,
+            state: formData.state,
+            lga: formData.localGovernment,
+            address: formData.companyAddress,
+          }
+        );
+
+        dispatch(
+          createCompanySuccess({
+            accessToken: response.data.data.accessToken,
+          })
+        );
+
+        setCurrentStep(2);
+      } catch (error) {
+        console.error("Company registration error:", error);
+        setErrors({
+          general:
+            error.response?.data?.message || "Failed to register company info",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     } else if (currentStep === 2 && validateStep2()) {
-      setCurrentStep(3);
+      setIsLoading(true);
+      try {
+        const response = await axiosClient.post("/payroll/auth/create-admin", {
+          firstName: formData.adminFirstName,
+          lastName: formData.adminLastName,
+          email: formData.adminEmail,
+          password: formData.adminPassword,
+        });
+
+        dispatch(
+          createAdminSuccess({
+            accessToken: response.data.data.accessToken,
+            refreshToken: response.data.data.refreshToken,
+            data: {
+              user: response.data.data.data.user,
+              companyId: response.data.data.data.companyId,
+              hasCompany: response.data.data.data.hasCompany,
+            },
+          })
+        );
+
+        setCurrentStep(3);
+      } catch (error) {
+        console.error("Company admin error:", error);
+        setErrors({
+          general:
+            error.response?.data?.message || "Failed to register company admin",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     } else if (currentStep === 3 && validateStep3()) {
-      setCurrentStep(4);
-      console.log("Verification code:", formData.verificationCode.join(""));
+      setIsLoading(true);
+      try {
+        const response = await axiosClient.post("/payroll/auth/verify-otp", {
+          email: formData.adminEmail,
+          otp: formData.verificationCode.join(""),
+        });
+
+        setCurrentStep(4);
+      } catch (error) {
+        console.error("Verify email error:", error);
+        setErrors({
+          general: error.response?.data?.message || "Failed to verify email",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     } else if (currentStep === 4 && validateStep4()) {
-      setCurrentStep(5);
-      console.log("2FA setup completed");
+      setIsLoading(true);
+      try {
+        const response = await axiosClient.post(
+          "/payroll/auth/2fa/authenticate",
+          {
+            token: twoFactorVerificationCode.join(""),
+          }
+        );
+
+        setCurrentStep(5);
+      } catch (error) {
+        console.error("2FA error:", error);
+        setErrors({
+          general: error.response?.data?.message || "Failed to 2FA",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     } else if (currentStep === 5) {
-      setCurrentStep(6);
-      console.log("Zoho sync:", zohoIntegrationEnabled ? "enabled" : "skipped");
+      setIsLoading(true);
+      try {
+        const response = await axiosClient.get("/payroll/auth/zoho-sync");
+        /* console.log("Zoho sync:", zohoIntegrationEnabled ? "enabled" : "skipped"); */
+        console.log("Zoho sync: ", response.data)
+        setCurrentStep(6);
+      } catch (error) {
+        console.error("Zoho sync error:", error);
+        setErrors({
+          general: error.response?.data?.message || "Failed to Zoho sync",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep === 4 && step4Phase === "scan") {
+      generate2FA();
+    }
+  }, [currentStep, step4Phase]);
+
+  const generate2FA = async () => {
+    try {
+      const response = await axiosClient.post("/payroll/auth/2fa");
+      console.log(5, response.data)
+      setTwoFactorCode(response.data.data.secret);
+      setQrCode(response.data.data.qrcode);
+    } catch (error) {
+      console.error("Error generating 2FA secret:", error);
     }
   };
 
@@ -364,6 +502,12 @@ const SignupForm = () => {
     } else {
       router.push("/login");
     }
+  };
+
+  const handleZohoSync = () => {
+    const state = store.getState();
+    const token = state.user.accessToken;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/payroll/auth/zoho-sync?token=${token}`;
   };
 
   const getStepStatus = (stepNumber) => {
@@ -439,6 +583,12 @@ const SignupForm = () => {
             </div>
           </div>
         </div>
+
+        {errors.general && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-700 text-sm">{errors.general}</p>
+          </div>
+        )}
 
         {currentStep === 1 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -522,13 +672,10 @@ const SignupForm = () => {
                       name="country"
                       value={formData.country}
                       onChange={handleSelectChange("country")}
-                      placeholder="Enter country"
-                      className={errors.country ? "border-red-500" : ""}
+                      placeholder="Select country"
                     >
-                      {countries.map((country) => (
-                        <option key={country} value={country}>
-                          {country}
-                        </option>
+                      {Object.keys(locationData).map((country) => (
+                        <option key={country} value={country}>{country}</option>
                       ))}
                     </Select>
                     {errors.country && (
@@ -546,13 +693,11 @@ const SignupForm = () => {
                       name="state"
                       value={formData.state}
                       onChange={handleSelectChange("state")}
-                      placeholder="Enter state"
-                      className={errors.state ? "border-red-500" : ""}
+                      placeholder="Select state"
+                      disabled={!formData.country}
                     >
                       {states.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
+                        <option key={state} value={state}>{state}</option>
                       ))}
                     </Select>
                     {errors.state && (
@@ -572,13 +717,11 @@ const SignupForm = () => {
                       name="localGovernment"
                       value={formData.localGovernment}
                       onChange={handleSelectChange("localGovernment")}
-                      placeholder="Enter local government"
-                      className={errors.localGovernment ? "border-red-500" : ""}
+                      placeholder="Select local government"
+                      disabled={!formData.state}
                     >
                       {localGovernments.map((lg) => (
-                        <option key={lg} value={lg}>
-                          {lg}
-                        </option>
+                        <option key={lg} value={lg}>{lg}</option>
                       ))}
                     </Select>
                     {errors.localGovernment && (
@@ -642,7 +785,7 @@ const SignupForm = () => {
                 onClick={handleContinue}
                 className="px-12 py-3 text-lg font-medium"
               >
-                Continue
+                {isLoading ? "Loading..." : "Continue"}
               </Button>
             </div>
           </div>
@@ -748,7 +891,7 @@ const SignupForm = () => {
                 onClick={handleContinue}
                 className="px-12 py-3 text-lg font-medium"
               >
-                Continue
+                {isLoading ? "Loading..." : "Continue"}
               </Button>
             </div>
           </div>
@@ -816,7 +959,7 @@ const SignupForm = () => {
                   validateStep3() ? "bg-black" : "bg-gray-400"
                 }`}
               >
-                Verify Email
+                {isLoading ? "Verifying Email..." : "Verify Email"}
               </Button>
             </div>
           </div>
@@ -836,28 +979,18 @@ const SignupForm = () => {
                     </p>
 
                     <div className="inline-block mb-6">
-                      <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
-                        <div className="w-40 h-40 bg-black relative">
-                          <div className="absolute inset-2 bg-white"></div>
-                          <div className="absolute top-2 left-2 w-8 h-8 bg-black"></div>
-                          <div className="absolute top-2 right-2 w-8 h-8 bg-black"></div>
-                          <div className="absolute bottom-2 left-2 w-8 h-8 bg-black"></div>
-                          <div className="absolute top-4 left-4 w-4 h-4 bg-white"></div>
-                          <div className="absolute top-4 right-4 w-4 h-4 bg-white"></div>
-                          <div className="absolute bottom-4 left-4 w-4 h-4 bg-white"></div>
-                          <div className="absolute top-12 left-8 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-16 left-6 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-20 left-12 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-14 right-8 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-18 right-6 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-22 right-10 w-2 h-2 bg-black"></div>
-                          <div className="absolute bottom-12 left-10 w-2 h-2 bg-black"></div>
-                          <div className="absolute bottom-16 left-14 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-28 left-16 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-24 left-20 w-2 h-2 bg-black"></div>
-                          <div className="absolute top-32 right-12 w-2 h-2 bg-black"></div>
-                          <div className="absolute bottom-20 right-16 w-2 h-2 bg-black"></div>
-                        </div>
+                      <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        {qrCode ? (
+                          <img
+                            src={qrCode}
+                            alt="2FA QR Code"
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <div className="text-gray-400 text-sm">
+                            Generating QR...
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -895,7 +1028,7 @@ const SignupForm = () => {
                             type="text"
                             value={twoFactorCode}
                             readOnly
-                            className="text-center font-mono bg-white"
+                            className="text-center font-mono bg-white "
                           />
                         </div>
                         <button
@@ -1001,7 +1134,7 @@ const SignupForm = () => {
                   </div>
 
                   <Button
-                    onClick={handleContinue}
+                    onClick={() => setCurrentStep(5)}
                     className="px-12 py-3 text-lg font-medium"
                   >
                     Sync with zoho
@@ -1024,175 +1157,95 @@ const SignupForm = () => {
                 </p>
               </div>
 
-              {!showZohoForm ? (
-                <>
-                  <div className="border-2 border-gray-200 rounded-lg p-6 mb-6">
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Image
-                    src="/images/zohoigimg.png"
-                    alt="Zoho Integration"
-                    className="w-15 h-15 object-contain"
-                    width={50}
-                    height={50}
-                  />
-                      </div>
-
-                      <div>
-                        <h3 className="text-lg font-semibold text-black mb-1">
-                          Zoho Integration
-                        </h3>
-                        <p className="text-gray-600 text-sm">
-                          Sync your Zoho people or Zoho books date
-                        </p>
-                      </div>
+              <>
+                <div className="border-2 border-gray-200 rounded-lg p-6 mb-6">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Image
+                        src="/images/zohoigimg.png"
+                        alt="Zoho Integration"
+                        className="w-15 h-15 object-contain"
+                        width={50}
+                        height={50}
+                      />
                     </div>
 
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center gap-3">
-                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">
-                          Import employee data automatically
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">
-                          Sync company structure and departments
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">
-                          Keep employee records updated
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <FaCheckCircle className="text-black text-lg flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">
-                          Streamline payroll processes
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                      <span className="text-sm font-medium text-black">
-                        Enable Zoho Integration
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setZohoIntegrationEnabled(!zohoIntegrationEnabled);
-                          if (!zohoIntegrationEnabled) {
-                            handleEnableZohoSync();
-                          }
-                        }}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          zohoIntegrationEnabled ? "bg-black" : "bg-gray-300"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            zohoIntegrationEnabled
-                              ? "translate-x-6"
-                              : "translate-x-1"
-                          }`}
-                        />
-                      </button>
+                    <div>
+                      <h3 className="text-lg font-semibold text-black mb-1">
+                        Zoho Integration
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        Sync your Zoho people or Zoho books date
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex justify-center">
-                    <Button
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-3">
+                      <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
+                        Import employee data automatically
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
+                        Sync company structure and departments
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
+                        Keep employee records updated
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <FaCheckCircle className="text-black text-lg flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
+                        Streamline payroll processes
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <span className="text-sm font-medium text-black">
+                      Enable Zoho Integration
+                    </span>
+                    <button
+                      type="button"
                       onClick={() => {
-                        if (zohoIntegrationEnabled) {
-                          setShowZohoForm(true);
+                        setZohoIntegrationEnabled(!zohoIntegrationEnabled);
+                        if (!zohoIntegrationEnabled) {
+                          handleEnableZohoSync();
                         }
                       }}
-                      className={`px-12 py-3 text-lg font-medium ${
-                        zohoIntegrationEnabled ? "bg-black" : "bg-gray-400"
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        zohoIntegrationEnabled ? "bg-black" : "bg-gray-300"
                       }`}
-                      disabled={!zohoIntegrationEnabled}
                     >
-                      Sync with zoho
-                    </Button>
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          zohoIntegrationEnabled
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
                   </div>
-                </>
-              ) : (
-                <>
-                  {/* Zoho Credentials Form */}
-                  <div className="space-y-6 mb-8">
-                    {/* Zoho Domain */}
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Zoho Domain
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaGlobe className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <Input
-                          type="text"
-                          value={zohoCredentials.domain}
-                          onChange={handleZohoCredentialsChange("domain")}
-                          placeholder="Yourcompany.zoho.com"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
+                </div>
 
-                    {/* Zoho ID */}
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Zoho ID
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaIdCard className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <Input
-                          type="text"
-                          value={zohoCredentials.id}
-                          onChange={handleZohoCredentialsChange("id")}
-                          placeholder="Enter your zoho ID"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Zoho Secret */}
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Zoho Secret
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FaLock className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <Input
-                          type="text"
-                          value={zohoCredentials.secret}
-                          onChange={handleZohoCredentialsChange("secret")}
-                          placeholder="Enter your zoho secret"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <Button
-                      onClick={handleContinue}
-                      className={`px-12 py-3 text-lg font-medium ${
-                        validateZohoCredentials() ? "bg-black" : "bg-gray-400"
-                      }`}
-                      disabled={!validateZohoCredentials()}
-                    >
-                      Sync with zoho
-                    </Button>
-                  </div>
-                </>
-              )}
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleZohoSync}
+                    className={`px-12 py-3 text-lg font-medium ${
+                      zohoIntegrationEnabled ? "bg-black" : "bg-gray-400"
+                    }`}
+                    disabled={!zohoIntegrationEnabled}
+                  >
+                    Sync with zoho
+                  </Button>
+                </div>
+              </>           
             </div>
           </div>
         )}

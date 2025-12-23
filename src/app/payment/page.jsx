@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSync, FaWallet, FaUsers, FaCalendar, FaChevronDown, FaTimes, FaCheck } from 'react-icons/fa';
 import Container from '@/components/ui/Container';
 import Button from '@/components/ui/Button';
@@ -9,9 +9,12 @@ import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import Pagination from '@/components/ui/Pagination';
 import Modal from '@/components/ui/Modal';
+import axiosClient from '@/components/axiosClient';
+import { formatCurrency } from '@/utils/formatCurrency';
+import { formatDate } from '@/utils/formatDate';
+import toast from 'react-hot-toast';
 
 const Payment = () => {
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterValue, setFilterValue] = useState('');
@@ -21,121 +24,64 @@ const Payment = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [totalPaidAmount, setTotalPaidAmount] = useState(0);
+  const [overviewData, setOverviewData] = useState([]);
+  const [payrollData, setPayrollData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize] = useState(10);
+  const [walletBalance, setWalletBalance] = useState(null)
+  const [lastTransactionDate, setLastTransactionDate] = useState(null)
   
   // New state for year and month selection
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedMonthDropdown, setSelectedMonthDropdown] = useState('');
 
-  const [paymentData, setPaymentData] = useState([
-    { 
-      id: 1, 
-      name: 'Ayobami Joy', 
-      department: 'Operation', 
-      basicSalary: 550000,
-      allowances: 100000,
-      deductions: 0,
-      netSalary: 650000,
-      status: 'Active', 
-      paymentStatus: 'Paid' 
-    },
-    { 
-      id: 2, 
-      name: 'Bethel Esther', 
-      department: 'Tech', 
-      basicSalary: 65000,
-      allowances: 5000,
-      deductions: 0,
-      netSalary: 70000,
-      status: 'Active', 
-      paymentStatus: 'Paid' 
-    },
-    { 
-      id: 3, 
-      name: 'Ohagbu Chika', 
-      department: 'Dev team', 
-      basicSalary: 500000,
-      allowances: 50000,
-      deductions: 0,
-      netSalary: 550000,
-      status: 'On leave', 
-      paymentStatus: 'Paid' 
-    },
-    { 
-      id: 4, 
-      name: 'John Paul', 
-      department: 'Dev team', 
-      basicSalary: 450000,
-      allowances: 50000,
-      deductions: 0,
-      netSalary: 500000,
-      status: 'Active', 
-      paymentStatus: 'Paid' 
-    },
-    { 
-      id: 5, 
-      name: 'Victor Ben', 
-      department: 'Operation', 
-      basicSalary: 350000,
-      allowances: 50000,
-      deductions: 0,
-      netSalary: 400000,
-      status: 'Active', 
-      paymentStatus: 'Unpaid' 
-    },
-    { 
-      id: 6, 
-      name: 'Okek Sandra', 
-      department: 'Tech team', 
-      basicSalary: 65000,
-      allowances: 5000,
-      deductions: 0,
-      netSalary: 70000,
-      status: 'On leave', 
-      paymentStatus: 'Unpaid' 
-    },
-    { 
-      id: 7, 
-      name: 'Yusuf Lawal', 
-      department: 'Marketing', 
-      basicSalary: 150000,
-      allowances: 50000,
-      deductions: 0,
-      netSalary: 200000,
-      status: 'On leave', 
-      paymentStatus: 'Unpaid' 
-    },
-    { 
-      id: 8, 
-      name: 'hamaza jeilli', 
-      department: 'Dev', 
-      basicSalary: 200000,
-      allowances: 50000,
-      deductions: 0,
-      netSalary: 250000,
-      status: 'Active', 
-      paymentStatus: 'Unpaid' 
-    },
-    { 
-      id: 9, 
-      name: 'Obi Paul', 
-      department: 'Marketing', 
-      basicSalary: 200000,
-      allowances: 50000,
-      deductions: 0,
-      netSalary: 250000,
-      status: 'Active', 
-      paymentStatus: 'Unpaid' 
-    }
-  ]);
+  const fetchOverview = async (page = 1) => {
+    setIsLoading(true);
+    try {
+      const [walletRes, staffRes, payrollRes, txRes] = await Promise.all([
+        axiosClient.get('/payroll/wallet'),
+        axiosClient.get(`/payroll/staff?page=${page}&limit=${pageSize}`),
+        axiosClient.get(`/payroll/payroll`),
+        axiosClient.get('/payroll/payroll/transaction-history?page=1&limit=1'),
+      ]);
 
-  const totalPages = 10;
+      const walletBalanceValue = walletRes?.data?.data?.balance || 0;
+      setWalletBalance(formatCurrency(walletBalanceValue));
+
+      const payrollDataMapped = (payrollRes?.data?.data?.data || []).map(
+        ({ id, companyUser }) => ({ id, companyUser })
+      );
+      setPayrollData(payrollDataMapped);
+
+      const staffData = staffRes?.data?.data?.results || [];
+      const pageInfo = staffRes?.data?.data?.meta || {};
+      setOverviewData(staffData);
+      setCurrentPage(pageInfo.page || 1);
+      setTotalPages(pageInfo.totalPages || 1);
+
+      const lastTx = txRes?.data?.data?.results?.[0];
+      setLastTransactionDate(lastTx ? formatDate(lastTx.createdAt) : 'N/A');
+    } catch (error) {
+      console.error('Error fetching overview:', error);
+      toast.error(error?.response?.data?.message || 'Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOverview(currentPage);
+  }, [currentPage]);
+
+  console.log(payrollData)
   const itemsPerPage = 10;
 
   // Calculate metrics
-  const totalPayment = totalPaidAmount;
-  
-  const totalStaff = paymentData.length;
-  const paidStaff = paymentData.filter(emp => emp.paymentStatus === 'Paid').length;
+  const totalPayment = overviewData.reduce((sum, emp) => sum + emp.netSalary, 0);
+  const totalStaff = overviewData.length;
+  const paidStaff = overviewData.filter(emp => emp.paymentStatus === 'Paid').length;
   const unpaidStaff = totalStaff - paidStaff;
 
   // Generate years array (current year and 5 years back)
@@ -169,86 +115,65 @@ const Payment = () => {
 
   const isPayButtonEnabled = selectedEmployees.length > 0;
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return `₦${amount.toLocaleString()}`;
-  };
-
   // Table columns configuration
   const columns = [
-    {
-      title: (
-        <input
-          type="checkbox"
-          className="w-4 h-4"
-          onChange={(e) => {
-            if (e.target.checked) {
-              setSelectedEmployees(paymentData.map(emp => emp.id));
-            } else {
-              setSelectedEmployees([]);
-            }
-          }}
-        />
-      ),
-      accessor: 'select',
-      render: (_, row) => (
-        <input
-          type="checkbox"
-          checked={selectedEmployees.includes(row.id)}
-          onChange={(e) => handleSelectEmployee(row.id, e.target.checked)}
-          className="w-4 h-4"
-        />
-      )
-    },
-    { title: 'Name', accessor: 'name' },
-    { title: 'Department', accessor: 'department' },
-    { 
-      title: 'Basic Salary', 
-      accessor: 'basicSalary',
-      render: (value) => formatCurrency(value)
-    },
-    { 
-      title: 'Allowances', 
-      accessor: 'allowances',
-      render: (value) => formatCurrency(value)
-    },
-    { 
-      title: 'Deductions', 
-      accessor: 'deductions',
-      render: (value) => formatCurrency(value)
-    },
-    { 
-      title: 'Net Salary', 
-      accessor: 'netSalary',
-      render: (value) => formatCurrency(value)
-    },
-    {
-      title: 'Status',
-      accessor: 'status',
-      render: (value) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-        }`}>
-          {value}
-        </span>
-      )
-    },
-    {
-      title: 'Payment status',
-      accessor: 'paymentStatus',
-      render: (value) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-        }`}>
-          {value}
-        </span>
-      )
-    }
-  ];
+  {
+    title: (
+      <input
+        type="checkbox"
+        className="w-4 h-4"
+        onChange={(e) => {
+          if (e.target.checked) {
+            setSelectedEmployees(payrollData.map(emp => emp.id));
+          } else {
+            setSelectedEmployees([]);
+          }
+        }}
+      />
+    ),
+    accessor: 'select',
+    render: (_, row) => (
+      <input
+        type="checkbox"
+        checked={selectedEmployees.includes(row.id)}
+        onChange={(e) => handleSelectEmployee(row.id, e.target.checked)}
+        className="w-4 h-4"
+      />
+    )
+  },
+  { 
+    title: 'Name', 
+    accessor: 'name', 
+    render: (_, row) => `${row.companyUser.user.firstName} ${row.companyUser.user.lastName}` 
+  },
+  { title: 'Department', accessor: 'department', render: (_, row) => row.companyUser.user.industry || 'N/A' },
+  { title: 'Gross Salary', accessor: 'grossSalary', render: (_, row) => formatCurrency(row.companyUser.grossSalary) },
+  // { title: 'Allowances', accessor: 'allowances', render: (_, row) => '0' },
+  { title: 'Deductions', accessor: 'deductions', render: (_, row) => formatCurrency(row.companyUser.totalDeduction) },
+  { title: 'Net Salary', accessor: 'netSalary', render: (_, row) => formatCurrency(row.companyUser.netSalary) },
+  { 
+    title: 'Status', 
+    accessor: 'status',
+    render: (_, row) => (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+        row.companyUser.employeeStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+      }`}>
+        {row.companyUser.employeeStatus}
+      </span>
+    )
+  },
+  {
+    title: 'Role',
+    accessor: 'role',
+    render: (_, row) => row.companyUser.role
+  }
+];
 
   // Actions
   const handlePageChange = (page) => {
-    setCurrentPage(page);
+    if (page >= 1 && page <= totalPages) {
+      fetchOverview(page);
+    }
   };
 
   const handleRefresh = () => {
@@ -261,40 +186,50 @@ const Payment = () => {
     }
   };
 
-  const getSelectedEmployeesData = () => {
-    return paymentData.filter(emp => selectedEmployees.includes(emp.id));
-  };
+  const getSelectedEmployeesData = () => payrollData.filter(emp => selectedEmployees.includes(emp.id));
 
   const calculateTotalAmount = () => {
     return getSelectedEmployeesData().reduce((sum, emp) => {
-      return sum + emp.netSalary;
+      return sum + emp.companyUser.netSalary;
     }, 0);
   };
 
   // Calculate totals for selected employees
-  const calculateTotals = () => {
-    const selectedData = getSelectedEmployeesData();
-    return {
-      basicSalary: selectedData.reduce((sum, emp) => sum + emp.basicSalary, 0),
-      totalAllowance: selectedData.reduce((sum, emp) => sum + emp.allowances, 0),
-      totalDeduction: selectedData.reduce((sum, emp) => sum + emp.deductions, 0),
-      netSalary: selectedData.reduce((sum, emp) => sum + emp.netSalary, 0),
-    };
+ const calculateTotals = () => {
+  const selectedData = getSelectedEmployeesData();
+  return {
+    grossSalary: selectedData.reduce((sum, emp) => sum + emp.companyUser.grossSalary, 0),
+    totalAllowance: 0, // or map from salaryBreakDown if available
+    totalDeduction: selectedData.reduce((sum, emp) => sum + emp.companyUser.totalDeduction, 0),
+    netSalary: selectedData.reduce((sum, emp) => sum + emp.companyUser.netSalary, 0),
   };
+};
 
   // Handle continue from payment selection modal
-  const handleContinueToPaymentProcess = () => {
+  const handleContinueToPaymentProcess = async() => {
     if (!selectedYear || !selectedMonthDropdown) {
-      alert('Please select both year and month');
+      toast.error('Please select both year and month');
       return;
     }
     
     // Format the selected month for display
     const monthLabel = months.find(m => m.value === selectedMonthDropdown)?.label;
     setSelectedMonth(`${monthLabel} ${selectedYear}`);
+
+    try {
+      const response = await axiosClient.post('/payroll/payroll/pay', {
+        payrollIds: selectedEmployees
+      })
+
+      if(response.success) {
+        setShowPaymentSelectionModal(false);
+        setShowPaymentProcessModal(true);
+      }
+      console.log(response.data)
+    } catch (error) {
+      toast.error(error?.response.data.message || error.message || 'Failed to process payment')
+    }
     
-    setShowPaymentSelectionModal(false);
-    setShowPaymentProcessModal(true);
   };
 
   const handleProcessPayment = () => {
@@ -306,10 +241,10 @@ const Payment = () => {
     setTotalPaidAmount(prev => prev + amount);
 
     // Mark employees as Paid
-    const updatedData = paymentData.map(emp =>
+    const updatedData = payrollData.map(emp =>
       selectedEmployees.includes(emp.id) ? { ...emp, paymentStatus: 'Paid' } : emp
     );
-    setPaymentData(updatedData);
+    setOverviewData(updatedData);
 
     setShowPaymentProcessModal(false);
     setShowSuccessModal(true);
@@ -335,24 +270,27 @@ const Payment = () => {
   };
 
   // Filter data based on search and filter
-  const filteredData = paymentData.filter((emp) => {
+const filteredData = payrollData
+  .filter(emp => {
+    const fullName = `${emp.companyUser.user.firstName} ${emp.companyUser.user.lastName}`;
     const matchesSearch =
-      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.department.toLowerCase().includes(searchTerm.toLowerCase());
+      fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (emp.company.name || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     let matchesFilter = true;
     if (filterValue === 'paid') {
-      matchesFilter = emp.paymentStatus.toLowerCase() === 'paid';
+      matchesFilter = emp.employeeStatus.toLowerCase() === 'paid'; // adjust if you track payment in overviewData
     } else if (filterValue === 'unpaid') {
-      matchesFilter = emp.paymentStatus.toLowerCase() === 'unpaid';
+      matchesFilter = emp.employeeStatus.toLowerCase() === 'active'; // or other logic
     } else if (filterValue === 'active') {
-      matchesFilter = emp.status.toLowerCase() === 'active';
+      matchesFilter = emp.employeeStatus.toLowerCase() === 'active';
     } else if (filterValue === 'on-leave') {
-      matchesFilter = emp.status.toLowerCase() === 'on leave';
+      matchesFilter = emp.employeeStatus.toLowerCase() === 'on leave';
     }
 
     return matchesSearch && matchesFilter;
   });
+
 
   return (
     <Container>
@@ -371,7 +309,7 @@ const Payment = () => {
           {/* Balance Section */}
           <div className="bg-white border border-gray-300 rounded-lg p-6 lg:w-1/3">
             <h3 className="text-sm text-gray-400 mb-2">Current Balance</h3>
-            <h1 className="text-3xl font-bold text-black mb-6">₦20,000,000</h1>
+            <h1 className="text-3xl font-bold text-black mb-6">{walletBalance}</h1>
             
             <Button 
               onClick={handlePay} 
@@ -397,7 +335,7 @@ const Payment = () => {
             {/* Total Staff Card */}
             <div className="bg-white rounded-lg p-3 space-y-1">
               <h3 className="text-gray-500 text-sm">Total staff</h3>
-              <h2 className="text-black text-xl font-semibold">{totalStaff.toLocaleString()}</h2>
+              <h2 className="text-black text-xl font-semibold">{totalStaff}</h2>
               <div className="flex items-center gap-3">
                 <span className="text-green-600 text-xs font-medium">{paidStaff} Paid</span>
                 <span className="text-red-600 text-xs font-medium">→ {unpaidStaff} Unpaid</span>
@@ -407,7 +345,7 @@ const Payment = () => {
             {/* Last Transactions Card */}
             <div className="bg-white rounded-lg p-3 space-y-1">
               <h3 className="text-gray-500 text-sm">Last transactions</h3>
-              <h2 className="text-black text-xl font-semibold">28,august 2025</h2>
+              <h2 className="text-black text-xl font-semibold">{lastTransactionDate}</h2>
             </div>
           </div>
         </div>
@@ -551,8 +489,8 @@ const Payment = () => {
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Basic Salary:</span>
-                    <span className="font-medium text-black">{formatCurrency(calculateTotals().basicSalary)}</span>
+                    <span className="text-gray-600">Gross Salary:</span>
+                    <span className="font-medium text-black">{formatCurrency(calculateTotals().grossSalary)}</span>
                   </div>
                   
                   <div className="flex items-center justify-between">

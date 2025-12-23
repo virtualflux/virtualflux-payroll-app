@@ -84,8 +84,22 @@ import {
   AiOutlineLogout, 
   AiOutlineCustomerService 
 } from 'react-icons/ai';
+import { useDispatch } from 'react-redux'
+import { logout } from '@/state/slices/user.slice';
+import { useRouter } from 'next/navigation'
+import { persistor } from '@/state/store';
 
 const Sidebar = ({ isOpen = true, onChangePasswordClick }) => {
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    dispatch(logout())
+    persistor.purge?.()
+    router.push('/login')
+  }
+
+
   const menuItems = [
     { icon: AiOutlineWallet, label: "Analytics", href: "/analytics" },
     { icon: AiOutlineHome, label: "Overview", href: "/overview" },
@@ -95,7 +109,7 @@ const Sidebar = ({ isOpen = true, onChangePasswordClick }) => {
     { icon: AiOutlineHistory, label: "Transaction History", href: "/transaction-history" },
     { icon: AiOutlineSetting, label: "Privacy and Setting", href: "/privacy-settings" },
     { icon: AiOutlineKey, label: "Change Password", onClick: onChangePasswordClick, isModal: true },
-    { icon: AiOutlineLogout, label: "Logout", href: "/login" },
+    { icon: AiOutlineLogout, label: "Logout", onClick: handleLogout, isLogout: true }
   ];
 
   return (
@@ -109,8 +123,9 @@ const Sidebar = ({ isOpen = true, onChangePasswordClick }) => {
 
       {/* Menu Items */}
       <nav className="mt-8">
-        {menuItems.map((item, index) => (
-          item.isModal ? (
+      {menuItems.map((item, index) => {
+        if (item.isModal) {
+          return (
             <button
               key={index}
               onClick={item.onClick}
@@ -119,12 +134,28 @@ const Sidebar = ({ isOpen = true, onChangePasswordClick }) => {
               <item.icon className="text-xl" />
               {isOpen && <span className="ml-4">{item.label}</span>}
             </button>
-          ) : (
-            <NavLink key={index} href={item.href} icon={item.icon}>
+          );
+        }
+
+        if (item.isLogout) {
+          return (
+            <button
+              key={index}
+              onClick={handleLogout}
+              className="flex items-center w-full px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+            >
+              <item.icon className="text-xl" />
               {isOpen && <span className="ml-4">{item.label}</span>}
-            </NavLink>
-          )
-        ))}
+            </button>
+          );
+        }
+        return (
+          <NavLink key={index} href={item.href} icon={item.icon}>
+            {isOpen && <span className="ml-4">{item.label}</span>}
+          </NavLink>
+        );
+      })}
+
       </nav>
 
       {/* Customer Support */}
