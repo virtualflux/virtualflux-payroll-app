@@ -379,7 +379,7 @@ const SignupForm = () => {
 
         dispatch(
           createCompanySuccess({
-            accessToken: response.data.data.accessToken,
+            accessToken: response?.data?.data.accessToken,
           })
         );
 
@@ -405,12 +405,12 @@ const SignupForm = () => {
 
         dispatch(
           createAdminSuccess({
-            accessToken: response.data.data.accessToken,
-            refreshToken: response.data.data.refreshToken,
+            accessToken: response?.data?.data.accessToken,
+            refreshToken: response?.data?.data.refreshToken,
             data: {
-              user: response.data.data.data.user,
-              companyId: response.data.data.data.companyId,
-              hasCompany: response.data.data.data.hasCompany,
+              user: response?.data?.data.data.user,
+              companyId: response?.data?.data.data.companyId,
+              hasCompany: response?.data?.data.data.hasCompany,
             },
           })
         );
@@ -489,8 +489,8 @@ const SignupForm = () => {
     try {
       const response = await axiosClient.post("/payroll/auth/2fa");
       console.log(5, response.data)
-      setTwoFactorCode(response.data.data.secret);
-      setQrCode(response.data.data.qrcode);
+      setTwoFactorCode(response?.data?.data.secret);
+      setQrCode(response?.data?.data.qrcode);
     } catch (error) {
       console.error("Error generating 2FA secret:", error);
     }

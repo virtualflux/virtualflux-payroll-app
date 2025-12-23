@@ -32,7 +32,7 @@ const CompanySettingsPage = () => {
     setIsLoading(true);
     try {
       const response = await axiosClient.get('/payroll/company');
-      const { company, admin } = response.data.data;
+      const { company, admin } = response?.data?.data;
 
       setCompanyData({ company, admin });
 

@@ -22,8 +22,8 @@ const ManageStaff = () => {
       const response = await axiosClient.get(
         `/payroll/staff?page=${page}&limit=10`
       );
-      setPageInfo(response.data.data?.pageInfo);
-      setOverviewData(response.data.data?.results);
+      setPageInfo(response?.data?.data?.pageInfo);
+      setOverviewData(response?.data?.data?.results);
     } catch (error) {
       toast.error(error.response?.data?.message || error.message  || "Failed to fetch staff data");
     } finally {

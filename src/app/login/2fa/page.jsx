@@ -68,13 +68,13 @@ const TwoFAForm = () => {
 
       dispatch(
         loginSuccess({
-          accessToken: response.data.accessToken,
-          refreshToken: response.data.refreshToken,
-          twoFaAuthenticated: response.data.data.twoFaAuthenticated,
+          accessToken: response?.data?.accessToken,
+          refreshToken: response?.data?.refreshToken,
+          twoFaAuthenticated: response?.data?.data?.twoFaAuthenticated,
           data: {
-            user: response.data.data.user,
-            companyId: response.data.hasCompany && response.data.companyId,
-            hasCompany: response.data.hasCompany,
+            user: response?.data?.data?.user,
+            companyId: response?.data?.hasCompany && response?.data?.companyId,
+            hasCompany: response?.data?.hasCompany,
           },
         })
       );

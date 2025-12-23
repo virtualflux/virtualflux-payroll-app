@@ -28,59 +28,58 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-// axiosClient.interceptors.response.use(
-//   response => response,
-//   async error => {
-//     const originalRequest = error.config
-//     console.log(1111)
-//     if (error.response?.status !== 401 || originalRequest._retry) {
-//       return Promise.reject(error)
-//     }
+axiosClient.interceptors.response.use(
+  response => response,
+  async error => {
+    const originalRequest = error.config
+    console.log(1111)
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error)
+    }
 
-//     originalRequest._retry = true
+    originalRequest._retry = true
 
-//     const { refreshToken } = store.getState().user
-//     if (!refreshToken) {
-//       store.dispatch(logout())
-//       return Promise.reject(error)
-//     }
+    const { refreshToken } = store.getState().user
+    if (!refreshToken) {
+      store.dispatch(logout())
+      return Promise.reject(error)
+    }
 
-//     if (isRefreshing) {
-//       return new Promise((resolve, reject) => {
-//         failedQueue.push({
-//           resolve: (token) => {
-//             originalRequest.headers.Authorization = `Bearer ${token}`
-//             resolve(axiosClient(originalRequest))
-//           },
-//           reject,
-//         })
-//       })
-//     }
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({
+          resolve: (token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`
+            resolve(axiosClient(originalRequest))
+          },
+          reject,
+        })
+      })
+    }
 
-//     isRefreshing = true
+    isRefreshing = true
 
-//     try {
-//       const { data } = await plainAxios.post('/payroll/auth/refresh-token', {
-//         refreshToken,
-//       })
-//       console.log(data)
+    try {
+      const { data } = await plainAxios.post('/payroll/auth/refresh-token', {
+        refreshToken,
+      })
 
-//       const newAccessToken = data.data.accessToken
-//      store.dispatch(updateAccessToken(newAccessToken))
+      const newAccessToken = data?.data?.accessToken
+      store.dispatch(updateAccessToken(newAccessToken))
 
-//       processQueue(null, newAccessToken)
+     processQueue(null, newAccessToken)
 
-//       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
-//       return axiosClient(originalRequest)
-//     } catch (err) {
-//       processQueue(err, null)
-//       store.dispatch(logout())
-//       window.location.href = '/login';
-//       return Promise.reject(err)
-//     } finally {
-//       isRefreshing = false
-//     }
-//   }
-// )
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+      return axiosClient(originalRequest)
+    } catch (err) {
+      processQueue(err, null)
+      store.dispatch(logout())
+      window.location.href = '/login';
+      return Promise.reject(err)
+    } finally {
+      isRefreshing = false
+    }
+  }
+)
 
 export default axiosClient;

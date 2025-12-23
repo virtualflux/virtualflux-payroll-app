@@ -64,7 +64,7 @@ const FundWallet = () => {
       const walletResponse = await axiosClient.get('/payroll/wallet');
       const virtualAccountResponse = await axiosClient.get('/payroll/wallet/get-wallet-details');
       const transactionResponse = await axiosClient.get(`/payroll/wallet/transaction-history?page=1&limit=5`);
-      setVirtualAccount(virtualAccountResponse.data.data)
+      setVirtualAccount(virtualAccountResponse?.data?.data)
       setTransactions(transactionResponse?.data?.data.results)
       setTotals(transactionResponse?.data?.data?.totals)
       setWalletBalance(formatCurrency(walletResponse?.data?.data?.balance))

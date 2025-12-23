@@ -29,9 +29,9 @@ const TransactionHistoryPage = () => {
     try {
       const response = await axiosClient.get(`/payroll/payroll/transaction-history?page=${page}&limit=${pageSize}`);
       const walletResponse = await axiosClient.get(`/payroll/wallet`);
-      setWalletBalance(formatCurrency(walletResponse.data.data?.balance))
-      const results = response.data.data?.results || [];
-      const pageInfo = response.data.data?.pageInfo || {};
+      setWalletBalance(formatCurrency(walletResponse?.data?.data?.balance))
+      const results = response?.data?.data?.results || [];
+      const pageInfo = response?.data?.data?.pageInfo || {};
       const mappedData = results.map((tx) => {
         const dateObj = new Date(tx.createdAt);
         const status =
