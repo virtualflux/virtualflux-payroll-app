@@ -26,9 +26,10 @@ const TwoFAForm = () => {
     if (!tempToken) {
       toast.error("No 2FA session found, please login again");
       router.push("/login");
-    } else {
-      fetchQRCode();
-    }
+    } 
+    // else {
+    //   fetchQRCode();
+    // }
   }, [tempToken]);
 
   const fetchQRCode = async () => {
@@ -155,7 +156,7 @@ const TwoFAForm = () => {
           </Button>
         </form>
 
-        <div className="text-center mt-4">
+        {/* <div className="text-center mt-4">
           <button
             type="button"
             onClick={handleResend}
@@ -163,7 +164,7 @@ const TwoFAForm = () => {
           >
             Resend Code
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

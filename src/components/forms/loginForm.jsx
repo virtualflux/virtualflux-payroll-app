@@ -63,27 +63,6 @@ const LoginForm = () => {
         return;
       }
 
-      // const { user, hasCompany } = response.data.data;
-
-      // if (!response?.success) {
-      //   toast(response?.message || "Invalid credentials");
-      //   return;
-      // }
-
-      // dispatch(
-      //   loginSuccess({
-      //     accessToken: response.data.accessToken,
-      //     refreshToken: response.data.refreshToken,
-      //     twoFaAuthenticated: response.data.twoFaAuthenticated,
-      //     data: {
-      //       user: response.data.user,
-      //       companyId: hasCompany && response.data.companyId,
-      //       hasCompany: response.data.data.hasCompany,
-      //     },
-      //   })
-      // );
-
-      // router.push("/overview");
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
