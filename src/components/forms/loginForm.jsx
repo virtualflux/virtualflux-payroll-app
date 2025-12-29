@@ -58,32 +58,32 @@ const LoginForm = () => {
       const { data: response } = await axiosClient.post("/payroll/auth/login", formData);
       console.log(response.data)
 
-      // if (response.data.twoFaRequired) {
-      //   router.push(`/login/2fa?tempToken=${response.data.tempToken}`);
-      //   return;
-      // }
-
-      const { user, hasCompany } = response.data.data;
-
-      if (!response?.success) {
-        toast(response?.message || "Invalid credentials");
+      if (response.data.twoFaRequired) {
+        router.push(`/login/2fa?tempToken=${response.data.tempToken}`);
         return;
       }
 
-      dispatch(
-        loginSuccess({
-          accessToken: response.data.accessToken,
-          refreshToken: response.data.refreshToken,
-          twoFaAuthenticated: response.data.twoFaAuthenticated,
-          data: {
-            user,
-            companyId: hasCompany && response.data.companyId,
-            hasCompany: response.data.data.hasCompany,
-          },
-        })
-      );
+      // const { user, hasCompany } = response.data.data;
 
-      router.push("/overview");
+      // if (!response?.success) {
+      //   toast(response?.message || "Invalid credentials");
+      //   return;
+      // }
+
+      // dispatch(
+      //   loginSuccess({
+      //     accessToken: response.data.accessToken,
+      //     refreshToken: response.data.refreshToken,
+      //     twoFaAuthenticated: response.data.twoFaAuthenticated,
+      //     data: {
+      //       user,
+      //       companyId: hasCompany && response.data.companyId,
+      //       hasCompany: response.data.data.hasCompany,
+      //     },
+      //   })
+      // );
+
+      // router.push("/overview");
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
