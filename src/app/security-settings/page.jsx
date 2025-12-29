@@ -1,10 +1,12 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AiOutlineClose } from 'react-icons/ai';
 import { useRouter } from 'next/navigation';
 import SettingsSidebar from '@/components/ui/SettingsSidebar';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
+import axiosClient from '@/components/axiosClient';
+import toast from 'react-hot-toast';
 
 const SecurityPage = () => {
   const router = useRouter();
@@ -13,6 +15,9 @@ const SecurityPage = () => {
   const [sessionTimeout, setSessionTimeout] = useState(true);
   const [ipRestriction, setIpRestriction] = useState(true);
   const [timeoutDuration, setTimeoutDuration] = useState('15 minutes');
+
+   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const ToggleSwitch = ({ checked, onChange }) => (
     <button
@@ -28,6 +33,54 @@ const SecurityPage = () => {
       />
     </button>
   );
+
+  const fetchSettings = async () => {
+      try {
+        const { data } = await axiosClient.get('/payroll/company/security/settings');
+
+        const settings = data?.data;
+  
+        setTwoFactor(!!settings?.twoFA);
+        setPasswordExpiration(!!settings?.passwordExpiration);
+        setSessionTimeout(!!settings?.sessionTimeout);
+        setIpRestriction(!!settings?.ipRestriction);
+        setTimeoutDuration(!!settings?.sessionTimeoutDuration || '15 minutes');
+      } catch (error) {
+        toast.error('Failed to load payroll settings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    useEffect(() => {
+      fetchSettings();
+    }, []);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+    
+        try {
+          const res =await axiosClient.patch('/payroll/company/security/settings', {
+            twoFA: twoFactor,
+            passwordExpiration,
+            sessionTimeout,
+            ipRestriction,
+            sessionTimeoutDuration: timeoutDuration
+          });
+    
+          await fetchSettings()
+          toast.success('Payroll settings updated successfully');
+        } catch (error) {
+          console.log(error)
+          const message =
+            error.response?.data?.message ||
+            'Failed to update payroll settings';
+    
+          toast.error(message);
+        } finally {
+          setIsSaving(false);
+        }
+      };
 
   return (
     <div className="flex min-h-screen bg-black">
@@ -111,7 +164,10 @@ const SecurityPage = () => {
               <AiOutlineClose className="text-lg" />
               Cancel
             </button>
-            <Button>Save changes</Button>
+            
+           <Button disabled={isSaving} onClick={handleSave}>
+              {isSaving ? 'Saving...' : 'Save changes'}
+            </Button>
           </div>
         </div>
       </div>
