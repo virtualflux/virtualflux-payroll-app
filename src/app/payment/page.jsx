@@ -27,6 +27,7 @@ const Payment = () => {
   const [overviewData, setOverviewData] = useState([]);
   const [payrollData, setPayrollData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize] = useState(10);
@@ -176,8 +177,17 @@ const Payment = () => {
     }
   };
 
-  const handleRefresh = () => {
-    console.log('Refreshing payment data...');
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchOverview(currentPage);
+      toast.success("Payment data refreshed");
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message  || "Failed to refresh payment data");
+    } finally {
+      setIsRefreshing(false);
+    }
+
   };
 
   const handlePay = () => {
@@ -298,10 +308,17 @@ const filteredData = payrollData
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-black">Payment</h1>
-          <Button onClick={handleRefresh} className="flex items-center gap-2">
-            <FaSync size={14} />
-            Refresh
-          </Button>
+          <Button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 bg-black text-white"
+          >
+            <FaSync
+              size={14}
+              className={isRefreshing ? "animate-spin" : ""}
+            />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+           </Button>
         </div>
 
         {/* Balance Section and Metrics Cards */}
